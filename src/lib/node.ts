@@ -6,6 +6,9 @@ export interface BookmarkNode {
   id: string;
   title: string;
   url?: string;
+  /** Where the node sits. Missing on the root. */
+  parentId?: string;
+  index?: number;
   /** Firefox only. */
   type?: 'bookmark' | 'folder' | 'separator';
   /** Chrome 134+ only, on the browser's permanent folders. */

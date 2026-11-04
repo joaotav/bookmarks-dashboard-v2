@@ -7,10 +7,12 @@
   let {
     link,
     onupdate,
+    ondelete,
   }: {
     link: Link;
     /** Renames the link or changes its URL. Without it, the link can't be edited. */
     onupdate?: (changes: { title?: string; url?: string }) => void;
+    ondelete?: () => void;
   } = $props();
 
   const icon = $derived(iconFor(link));
@@ -68,6 +70,7 @@
       items={[
         { label: 'Rename', onselect: () => (editing = 'title') },
         { label: 'Edit URL', onselect: () => (editing = 'url') },
+        ...(ondelete ? [{ label: 'Delete', onselect: ondelete, danger: true }] : []),
       ]}
     />
   {/if}

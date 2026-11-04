@@ -7,7 +7,7 @@ const links: Link[] = [
   { id: 'l1', title: 'GitHub', url: 'https://github.com', openable: true },
   { id: 'l2', title: 'GitLab', url: 'https://gitlab.com', openable: true },
 ];
-const props = { id: 'c1', title: 'Repos', links, collapsed: false, ontoggle: () => {}, onadd: () => {}, onupdatelink: () => {} };
+const props = { id: 'c1', title: 'Repos', links, collapsed: false, ontoggle: () => {}, onadd: () => {}, onupdatelink: () => {}, ondeletelink: () => {} };
 
 describe('CategoryCard', () => {
   it('shows the category name, its link count and its links', () => {
@@ -59,7 +59,7 @@ describe('CategoryCard', () => {
 
   it('renames itself inline from its menu', async () => {
     const onrename = vi.fn();
-    render(CategoryCard, { ...props, onrename });
+    render(CategoryCard, { ...props, onrename, ondelete: () => {} });
     await fireEvent.click(screen.getByRole('button', { name: 'Actions for Repos' }));
     await fireEvent.click(screen.getByRole('button', { name: 'Rename' }));
     const field = screen.getByRole('textbox', { name: 'Category name' });
@@ -78,5 +78,17 @@ describe('CategoryCard', () => {
     await fireEvent.input(field, { target: { value: 'Lab' } });
     await fireEvent.keyDown(field, { key: 'Enter' });
     expect(onupdatelink).toHaveBeenCalledWith('l2', { title: 'Lab' });
+  });
+
+  it('deletes itself, or one of its links, from their menus', async () => {
+    const ondelete = vi.fn();
+    const ondeletelink = vi.fn();
+    render(CategoryCard, { ...props, onrename: () => {}, ondelete, ondeletelink });
+    await fireEvent.click(screen.getByRole('button', { name: 'Actions for Repos' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(ondelete).toHaveBeenCalledOnce();
+    await fireEvent.click(screen.getByRole('button', { name: 'Actions for GitLab' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(ondeletelink).toHaveBeenCalledWith(links[1]);
   });
 });

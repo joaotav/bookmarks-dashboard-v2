@@ -13,18 +13,22 @@
     collapsed,
     ontoggle,
     onrename,
+    ondelete,
     onadd,
     onupdatelink,
+    ondeletelink,
   }: {
     id: string;
     title: string;
     links: Link[];
     collapsed: boolean;
     ontoggle: () => void;
-    /** Without it, the category can't be renamed, like the "Unsorted" card. */
+    /** Without these, the category can't be renamed or deleted, like the "Unsorted" card. */
     onrename?: (title: string) => void;
+    ondelete?: () => void;
     onadd: (url: string, title: string) => void;
     onupdatelink: (id: string, changes: { title?: string; url?: string }) => void;
+    ondeletelink: (link: Link) => void;
   } = $props();
 
   let renaming = $state(false);
@@ -50,8 +54,14 @@
           <span class="count">{links.length}</span>
         </button>
       </h2>
-      {#if onrename}
-        <Menu label="Actions for {title}" items={[{ label: 'Rename', onselect: () => (renaming = true) }]} />
+      {#if onrename && ondelete}
+        <Menu
+          label="Actions for {title}"
+          items={[
+            { label: 'Rename', onselect: () => (renaming = true) },
+            { label: 'Delete', onselect: ondelete, danger: true },
+          ]}
+        />
       {/if}
     {/if}
   </div>
@@ -60,7 +70,9 @@
       {#if links.length > 0}
         <ul>
           {#each links as link (link.id)}
-            <li><LinkItem {link} onupdate={(changes) => onupdatelink(link.id, changes)} /></li>
+            <li>
+              <LinkItem {link} onupdate={(changes) => onupdatelink(link.id, changes)} ondelete={() => ondeletelink(link)} />
+            </li>
           {/each}
         </ul>
       {:else}
