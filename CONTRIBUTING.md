@@ -1,6 +1,6 @@
 # Contributing
 
-Every change starts as an issue, is made on a branch, and reaches `main` through a pull request that is squash-merged once CI passes. The process follows [Hermes](https://github.com/informalsystems/hermes/blob/master/CONTRIBUTING.md), scaled down to a small project.
+Every change starts as an issue, is made on a branch, and reaches `main` through a pull request that is squash-merged once CI passes.
 
 - [Issues](#issues)
 - [Branches and commits](#branches-and-commits)

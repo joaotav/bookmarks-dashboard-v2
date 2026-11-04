@@ -3,6 +3,7 @@
   "description": "New tab page with the links you are working on, organized into spaces and categories",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "wxt",
