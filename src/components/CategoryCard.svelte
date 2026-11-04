@@ -14,6 +14,7 @@
     ontoggle,
     onrename,
     ondelete,
+    onopenall,
     onadd,
     onupdatelink,
     ondeletelink,
@@ -26,12 +27,38 @@
     /** Without these, the category can't be renamed or deleted, like the "Unsorted" card. */
     onrename?: (title: string) => void;
     ondelete?: () => void;
+    /** Receives the URLs to open, after asking first when there are many. */
+    onopenall: (urls: string[]) => void;
     onadd: (url: string, title: string) => void;
     onupdatelink: (id: string, changes: { title?: string; url?: string }) => void;
     ondeletelink: (link: Link) => void;
   } = $props();
 
   let renaming = $state(false);
+
+  // Opening more tabs than this at once asks first.
+  const CONFIRM_OVER = 10;
+  // Only web links open, the same as clicking them.
+  const urls = $derived(links.filter((link) => link.openable).map((link) => link.url));
+  let confirming = $state(false);
+
+  function openAll() {
+    if (urls.length > CONFIRM_OVER) confirming = true;
+    else onopenall(urls);
+  }
+
+  function confirmOpen() {
+    confirming = false;
+    onopenall(urls);
+  }
+
+  const focus = (button: HTMLButtonElement) => button.focus();
+
+  const items = $derived([
+    ...(onrename ? [{ label: 'Rename', onselect: () => (renaming = true) }] : []),
+    ...(urls.length > 0 ? [{ label: 'Open all bookmarks', onselect: openAll }] : []),
+    ...(ondelete ? [{ label: 'Delete', onselect: ondelete, danger: true }] : []),
+  ]);
 </script>
 
 <section class="card" class:collapsed>
@@ -54,17 +81,30 @@
           <span class="count">{links.length}</span>
         </button>
       </h2>
-      {#if onrename && ondelete}
-        <Menu
-          label="Actions for {title}"
-          items={[
-            { label: 'Rename', onselect: () => (renaming = true) },
-            { label: 'Delete', onselect: ondelete, danger: true },
-          ]}
-        />
+      {#if items.length > 0}
+        <Menu label="Actions for {title}" {items} />
       {/if}
     {/if}
   </div>
+  {#if confirming}
+    <!-- The listener catches Escape from the buttons inside, which are interactive. -->
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div
+      class="confirm"
+      role="group"
+      aria-label="Open all bookmarks"
+      onkeydown={(event) => {
+        if (event.key === 'Escape') {
+          event.stopPropagation();
+          confirming = false;
+        }
+      }}
+    >
+      <span>Open {urls.length} tabs?</span>
+      <button class="primary" onclick={confirmOpen} {@attach focus}>Open</button>
+      <button onclick={() => (confirming = false)}>Cancel</button>
+    </div>
+  {/if}
   {#if !collapsed}
     <div id="links-{id}" class="body" transition:slide={{ duration: 150 }}>
       {#if links.length > 0}
@@ -167,6 +207,38 @@
   }
   .add {
     margin-top: var(--row-gap);
+  }
+  .confirm {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 6px 6px 6px 10px;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+  }
+  .confirm span {
+    flex: 1;
+  }
+  .confirm button {
+    width: auto;
+    height: 26px;
+    padding: 0 10px;
+    color: var(--muted);
+  }
+  .confirm button:hover {
+    background: var(--row-hover);
+    color: var(--fg);
+  }
+  .confirm .primary {
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+  }
+  .confirm .primary:hover {
+    background: var(--accent);
+    color: var(--bg);
+    filter: brightness(1.1);
   }
   .empty {
     margin: 0;

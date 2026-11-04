@@ -12,6 +12,7 @@
   import { getActiveSpaceId, getCollapsed, setActiveSpaceId, setCollapsed, watchCollapsed } from '@/lib/meta';
   import { cacheSettings, getCachedSettings, getSettings, setSettings, watchSettings, type Settings } from '@/lib/settings';
   import { defaultTitle, joinEmoji, toSpaces, UNSORTED, type Link, type Space } from '@/lib/tree';
+  import { openInBackground } from '@/lib/tabs';
   import { remove, restore } from '@/lib/undo';
 
   let spaces = $state<Space[] | null>(null);
@@ -202,6 +203,7 @@
           links={active.unsorted}
           collapsed={collapsed.includes(active.id)}
           ontoggle={() => toggle(active.id)}
+          onopenall={(urls) => void openInBackground(urls)}
           onadd={addLink(active.id)}
           onupdatelink={updateLink}
           ondeletelink={deleteLink}
@@ -216,6 +218,7 @@
           ontoggle={() => toggle(category.id)}
           onrename={(title) => void update(category.id, { title })}
           ondelete={() => void deleteItem(category.id, `Deleted “${category.title}”`)}
+          onopenall={(urls) => void openInBackground(urls)}
           onadd={addLink(category.id)}
           onupdatelink={updateLink}
           ondeletelink={deleteLink}

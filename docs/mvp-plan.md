@@ -211,7 +211,7 @@ src/
     popup/           index.html, main.ts, App.svelte
   components/        CategoryCard, LinkItem, SpaceTabs, SearchBox, SettingsPanel, Toast, ...
   lib/
-    bookmarks.ts     thin wrapper over browser.bookmarks: ensureRoot, getWorkspace, create, update, move, remove, subscribe
+    bookmarks.ts     thin wrapper over browser.bookmarks: ensureRoot, getWorkspace, create, update, move, subscribe
     node.ts          bookmark node shape shared by both browsers, isFolder, isLink                (pure)
     tree.ts          BookmarkTreeNode to view model, URL safety, space emoji   (pure)
     root.ts          pickOtherBookmarksFolder                                  (pure)
@@ -219,7 +219,8 @@ src/
     settings.ts      display settings in storage.sync, with defaults
     icons.ts         iconFor, per browser
     search.ts        uFuzzy index and ranking                                  (pure)
-    undo.ts          snapshot and restore a deleted subtree
+    tabs.ts          open links in background tabs
+    undo.ts          remove a subtree with a snapshot, and restore it
 tests/
   unit/              Vitest, one file per module in src/lib
   component/         Vitest + Testing Library, one file per component

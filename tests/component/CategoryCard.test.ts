@@ -7,7 +7,7 @@ const links: Link[] = [
   { id: 'l1', title: 'GitHub', url: 'https://github.com', openable: true },
   { id: 'l2', title: 'GitLab', url: 'https://gitlab.com', openable: true },
 ];
-const props = { id: 'c1', title: 'Repos', links, collapsed: false, ontoggle: () => {}, onadd: () => {}, onupdatelink: () => {}, ondeletelink: () => {} };
+const props = { id: 'c1', title: 'Repos', links, collapsed: false, ontoggle: () => {}, onadd: () => {}, onupdatelink: () => {}, ondeletelink: () => {}, onopenall: () => {} };
 
 describe('CategoryCard', () => {
   it('shows the category name, its link count and its links', () => {
@@ -52,8 +52,16 @@ describe('CategoryCard', () => {
     expect(screen.getAllByRole('link')).toHaveLength(2);
   });
 
-  it('has no menu when it cannot be renamed, like the Unsorted card', () => {
+  it('only offers Open all bookmarks when it cannot be renamed or deleted, like the Unsorted card', async () => {
     render(CategoryCard, props);
+    await fireEvent.click(screen.getByRole('button', { name: 'Actions for Repos' }));
+    expect(screen.getAllByRole('button').map((button) => button.textContent?.trim())).toContain('Open all bookmarks');
+    expect(screen.queryByRole('button', { name: 'Rename' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+  });
+
+  it('has no menu at all without links it could open', () => {
+    render(CategoryCard, { ...props, links: [{ id: 'l3', title: 'Bookmarklet', url: 'javascript:void 0', openable: false }] });
     expect(screen.queryByRole('button', { name: 'Actions for Repos' })).toBeNull();
   });
 
@@ -90,5 +98,47 @@ describe('CategoryCard', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Actions for GitLab' }));
     await fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
     expect(ondeletelink).toHaveBeenCalledWith(links[1]);
+  });
+
+  const many: Link[] = Array.from({ length: 11 }, (_, i) => ({ id: `m${i}`, title: `Page ${i}`, url: `https://example.com/${i}`, openable: true }));
+  const openAll = () => fireEvent.click(screen.getByRole('button', { name: 'Open all bookmarks' }));
+  const openMenu = () => fireEvent.click(screen.getByRole('button', { name: 'Actions for Repos' }));
+
+  it('opens up to 10 web links at once without asking, skipping the others', async () => {
+    const onopenall = vi.fn();
+    const bookmarklet: Link = { id: 'b', title: 'Bookmarklet', url: 'javascript:void 0', openable: false };
+    render(CategoryCard, { ...props, links: [...many.slice(0, 10), bookmarklet], onopenall });
+    await openMenu();
+    await openAll();
+    expect(onopenall).toHaveBeenCalledWith(many.slice(0, 10).map((link) => link.url));
+    expect(screen.queryByRole('group', { name: 'Open all bookmarks' })).toBeNull();
+  });
+
+  it('asks first when there are more than 10, and opens them on confirm', async () => {
+    const onopenall = vi.fn();
+    render(CategoryCard, { ...props, links: many, onopenall });
+    await openMenu();
+    await openAll();
+    expect(onopenall).not.toHaveBeenCalled();
+    const confirm = screen.getByRole('group', { name: 'Open all bookmarks' });
+    expect(confirm).toHaveTextContent('Open 11 tabs?');
+    expect(screen.getByRole('button', { name: 'Open' })).toHaveFocus();
+    await fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+    expect(onopenall).toHaveBeenCalledWith(many.map((link) => link.url));
+    expect(screen.queryByRole('group', { name: 'Open all bookmarks' })).toBeNull();
+  });
+
+  it('opens nothing when the question is cancelled or dismissed with Escape', async () => {
+    const onopenall = vi.fn();
+    render(CategoryCard, { ...props, links: many, onopenall });
+    await openMenu();
+    await openAll();
+    await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('group', { name: 'Open all bookmarks' })).toBeNull();
+    await openMenu();
+    await openAll();
+    await fireEvent.keyDown(screen.getByRole('button', { name: 'Open' }), { key: 'Escape' });
+    expect(screen.queryByRole('group', { name: 'Open all bookmarks' })).toBeNull();
+    expect(onopenall).not.toHaveBeenCalled();
   });
 });
