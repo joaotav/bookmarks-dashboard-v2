@@ -13,7 +13,10 @@ describe('CategoryCard', () => {
   it('shows the category name, its link count and its links', () => {
     render(CategoryCard, props);
     expect(screen.getByRole('heading', { name: /Repos/ })).toHaveTextContent('2');
-    expect(screen.getAllByRole('link').map((a) => a.textContent?.trim())).toEqual(['GitHub', 'GitLab']);
+    expect(screen.getAllByRole('link')).toEqual([
+      screen.getByRole('link', { name: 'GitHub' }),
+      screen.getByRole('link', { name: 'GitLab' }),
+    ]);
   });
 
   it('says so when the category has no links', () => {

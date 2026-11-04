@@ -1,4 +1,5 @@
-/* Neutral dark, the default theme. M3 adds the others as alternative sets of these variables. */
+/* Neutral dark, the default theme. The display settings set data-* attributes on <html>, and the
+   rules below override these variables to match. */
 :root {
   --bg: #1c1d22;
   --bar: #202127;
@@ -14,8 +15,66 @@
   --row-height: 34px;
   --row-gap: 6px;
   --card-padding: 12px;
+  --font-size: 13px;
 
   color-scheme: dark;
+}
+
+:root[data-theme='tokyo-night'] {
+  --bg: #1a1b26;
+  --bar: #16161e;
+  --card: #1f2335;
+  --row: #292e42;
+  --row-hover: #343a55;
+  --fg: #c0caf5;
+  --muted: #737aa2;
+  --accent: #7aa2f7;
+  --border: #2f334d;
+}
+
+:root[data-theme='rose-pine'] {
+  --bg: #191724;
+  --bar: #1f1d2e;
+  --card: #1f1d2e;
+  --row: #26233a;
+  --row-hover: #403d52;
+  --fg: #e0def4;
+  --muted: #908caa;
+  --accent: #ebbcba;
+  --border: #2a273f;
+}
+
+:root[data-theme='dracula'] {
+  --bg: #21222c;
+  --bar: #191a21;
+  --card: #282a36;
+  --row: #343746;
+  --row-hover: #44475a;
+  --fg: #f8f8f2;
+  --muted: #8a90b8;
+  --accent: #bd93f9;
+  --border: #383a4a;
+}
+
+:root[data-theme='rose-pine-dawn'] {
+  --bg: #faf4ed;
+  --bar: #f2e9e1;
+  --card: #fffaf3;
+  --row: #f2e9e1;
+  --row-hover: #dfdad9;
+  --fg: #575279;
+  --muted: #797593;
+  --accent: #907aa9;
+  --border: #dfdad9;
+
+  color-scheme: light;
+}
+
+:root[data-density='compact'] {
+  --row-height: 26px;
+  --row-gap: 2px;
+  --card-padding: 8px;
+  --font-size: 12.5px;
 }
 
 * {
@@ -26,7 +85,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font: 13px/1.4 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font: var(--font-size)/1.4 system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 button {

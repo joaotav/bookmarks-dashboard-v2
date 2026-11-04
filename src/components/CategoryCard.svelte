@@ -46,6 +46,12 @@
     border-radius: 10px;
     background: var(--card);
   }
+  /* Fixed sizing: the card fills its grid column. */
+  :global(:root[data-sizing='fixed']) .card {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
   h2 {
     margin: 0;
     font-size: 13px;
