@@ -2,6 +2,8 @@
   export interface MenuItem {
     label: string;
     onselect: () => void;
+    /** Shown in red, for actions like Delete. */
+    danger?: boolean;
   }
 </script>
 
@@ -39,7 +41,7 @@
   {#if open}
     <div class="items">
       {#each items as item (item.label)}
-        <button onclick={() => select(item)}>{item.label}</button>
+        <button class:danger={item.danger} onclick={() => select(item)}>{item.label}</button>
       {/each}
     </div>
   {/if}
@@ -90,5 +92,8 @@
   }
   .items button:hover {
     background: var(--row-hover);
+  }
+  .items .danger {
+    color: var(--danger);
   }
 </style>

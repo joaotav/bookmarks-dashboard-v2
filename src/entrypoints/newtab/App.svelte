@@ -6,14 +6,20 @@
   import SettingsPanel from '@/components/SettingsPanel.svelte';
   import SpaceForm from '@/components/SpaceForm.svelte';
   import SpaceTabs from '@/components/SpaceTabs.svelte';
+  import Toast from '@/components/Toast.svelte';
   import { create, getWorkspace, subscribe, update } from '@/lib/bookmarks';
+  import { isFolder, type BookmarkNode } from '@/lib/node';
   import { getActiveSpaceId, getCollapsed, setActiveSpaceId, setCollapsed, watchCollapsed } from '@/lib/meta';
   import { cacheSettings, getCachedSettings, getSettings, setSettings, watchSettings, type Settings } from '@/lib/settings';
-  import { defaultTitle, joinEmoji, toSpaces, UNSORTED, type Space } from '@/lib/tree';
+  import { defaultTitle, joinEmoji, toSpaces, UNSORTED, type Link, type Space } from '@/lib/tree';
+  import { remove, restore } from '@/lib/undo';
 
   let spaces = $state<Space[] | null>(null);
   let rootId = $state<string | undefined>();
   let spaceForm = $state<'new' | 'rename' | null>(null);
+  // The toast after a delete holds what was deleted, so it can be undone. Only the most
+  // recent delete can be.
+  let toast = $state<{ message: string; deleted?: BookmarkNode } | null>(null);
   let activeId = $state<string | undefined>();
   let error = $state<string | null>(null);
   let collapsed = $state<string[]>([]);
@@ -70,6 +76,28 @@
     void create(parentId, title || defaultTitle(url), url);
   const updateLink = (id: string, changes: { title?: string; url?: string }) => void update(id, changes);
 
+  async function deleteItem(id: string, message: string) {
+    toast = { message, deleted: await remove(id) };
+  }
+
+  const deleteLink = (link: Link) => void deleteItem(link.id, `Deleted “${link.title}”`);
+
+  async function undo() {
+    const deleted = toast?.deleted;
+    if (!deleted) return;
+    toast = null;
+    try {
+      const id = await restore(deleted);
+      // A restored space opens again.
+      if (deleted.parentId === rootId && isFolder(deleted)) {
+        await load();
+        select(id);
+      }
+    } catch {
+      toast = { message: `Couldn't restore “${deleted.title}”` };
+    }
+  }
+
   function saveCollapsed(ids: string[]) {
     collapsed = ids;
     void setCollapsed(ids);
@@ -112,7 +140,14 @@
     {#if active && isRealSpace(active)}
       <Menu
         label="Actions for space {active.name}"
-        items={[{ label: 'Rename', onselect: () => (spaceForm = 'rename') }]}
+        items={[
+          { label: 'Rename', onselect: () => (spaceForm = 'rename') },
+          {
+            label: 'Delete',
+            onselect: () => void deleteItem(active.id, `Deleted space “${joinEmoji(active.emoji, active.name)}”`),
+            danger: true,
+          },
+        ]}
       />
     {/if}
     {#if spaces}
@@ -169,6 +204,7 @@
           ontoggle={() => toggle(active.id)}
           onadd={addLink(active.id)}
           onupdatelink={updateLink}
+          ondeletelink={deleteLink}
         />
       {/if}
       {#each active.categories as category (category.id)}
@@ -179,8 +215,10 @@
           collapsed={collapsed.includes(category.id)}
           ontoggle={() => toggle(category.id)}
           onrename={(title) => void update(category.id, { title })}
+          ondelete={() => void deleteItem(category.id, `Deleted “${category.title}”`)}
           onadd={addLink(category.id)}
           onupdatelink={updateLink}
+          ondeletelink={deleteLink}
         />
       {/each}
       {#if isRealSpace(active)}
@@ -189,6 +227,13 @@
     </div>
   {/if}
 </main>
+
+{#if toast}
+  <!-- Keyed, so a new delete restarts the countdown. -->
+  {#key toast}
+    <Toast message={toast.message} onundo={toast.deleted ? undo : undefined} ondismiss={() => (toast = null)} />
+  {/key}
+{/if}
 
 <style>
   .bar {

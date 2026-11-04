@@ -37,4 +37,10 @@ describe('Menu', () => {
     expect(screen.queryByRole('button', { name: 'Rename' })).toBeNull();
     expect(toggle).toHaveFocus();
   });
+
+  it('marks dangerous items, like Delete', async () => {
+    render(Menu, { label: 'Actions', items: [{ label: 'Delete', onselect: () => {}, danger: true }] });
+    await fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
+    expect(screen.getByRole('button', { name: 'Delete' })).toHaveClass('danger');
+  });
 });
