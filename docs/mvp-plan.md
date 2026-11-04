@@ -210,6 +210,7 @@ src/
   components/        CategoryCard, LinkItem, SpaceTabs, SearchBox, SettingsPanel, Toast, ...
   lib/
     bookmarks.ts     thin wrapper over browser.bookmarks: ensureRoot, getWorkspace, create, update, move, remove, subscribe
+    node.ts          bookmark node shape shared by both browsers, isFolder, isLink                (pure)
     tree.ts          BookmarkTreeNode to view model, URL safety, space emoji   (pure)
     root.ts          pickOtherBookmarksFolder                                  (pure)
     meta.ts          collapsed state and icon cache in storage.local
