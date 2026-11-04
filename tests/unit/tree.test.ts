@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { BookmarkNode } from '@/lib/node';
 import { splitEmoji, toSpaces, UNSORTED } from '@/lib/tree';
-
-const folder = (id: string, title: string, children: BookmarkNode[] = []): BookmarkNode => ({ id, title, children });
-const link = (id: string, title: string, url: string): BookmarkNode => ({ id, title, url });
-const separator = (id: string): BookmarkNode => ({ id, title: '', url: 'data:', type: 'separator' });
+import { folder, link, separator } from '../fixtures/trees';
 
 describe('splitEmoji', () => {
   it('splits a leading emoji from the name', () => {

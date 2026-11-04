@@ -218,7 +218,11 @@ src/
     icons.ts         iconFor, per browser
     search.ts        uFuzzy index and ranking                                  (pure)
     undo.ts          snapshot and restore a deleted subtree
-tests/               Vitest, one file per pure module
+tests/
+  unit/              Vitest, one file per module in src/lib
+  component/         Vitest + Testing Library, one file per component
+  e2e/               Playwright, one file per feature
+  fixtures/          sample bookmark trees and an in-memory browser.bookmarks
 public/icon/         extension icons, placeholders from the WXT template for now
 wxt.config.ts
 ```
@@ -227,11 +231,19 @@ No background script in the MVP. Everything happens in the new tab page and the 
 
 ## Testing
 
-`@webext-core/fake-browser`, which WXT's Vitest plugin installs, implements `storage` and `tabs` but not `bookmarks`. So:
+Three layers, each in its own folder under `tests/`:
 
-- Logic lives in pure modules (`tree`, `root`, `search`) with unit tests on fixture data. Fixtures include a Firefox tree and a Chrome tree with both local and account folders.
-- `lib/bookmarks.ts` stays a thin wrapper with no branching beyond what the browser API needs. Every milestone ends with a short manual check in both browsers.
-- `npm run check` runs `svelte-check`, `vitest run`, `npm audit` and `web-ext lint` on the Firefox build.
+| Layer | Folder | Runs in | What it covers |
+|---|---|---|---|
+| Unit | `tests/unit/` | Vitest, Node | Everything in `src/lib/`: tree conversion, finding and creating the Workspace folder, stored metadata, icons |
+| Component | `tests/component/` | Vitest, jsdom, Testing Library | One Svelte component at a time: what it renders, what clicks do, accessibility attributes, text escaping |
+| End-to-end | `tests/e2e/` | Playwright, Chromium | The built extension in a real browser: bookmarks created through the API show up, collapse state persists and syncs between tabs |
+
+- `tests/fixtures/` holds shared sample trees (Firefox, Chrome with and without account folders, Chrome before 134) and an in-memory `browser.bookmarks`. WXT's fake browser (`@webext-core/fake-browser`) implements `storage` but not `bookmarks`.
+- `tests/component/setup.ts` fills in browser APIs jsdom lacks: `Element.animate` for Svelte transitions and `document.fonts`.
+- End-to-end tests load `.output/chrome-mv3` into Playwright's Chromium with a fresh profile per test. Branded Chrome ignores `--load-extension`, Playwright's Chromium doesn't. The extension has no background script, so the tests compute its ID from the folder path the way Chrome does.
+- Firefox can't open extension pages under automation, so each milestone ends with a short manual check in Firefox.
+- `npm test` runs unit and component tests. `npm run test:e2e` builds the Chrome extension and runs the end-to-end tests. `npm run check` runs `svelte-check`, the Vitest tests, `npm audit` and `web-ext lint` on the Firefox build.
 
 ## Milestones
 

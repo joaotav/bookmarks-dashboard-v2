@@ -30,4 +30,11 @@ describe('collapsed state', () => {
     await setCollapsed([]);
     expect(onChange.mock.calls).toEqual([[['12']]]);
   });
+
+  it('ignores a key with the same name in synced storage', async () => {
+    const onChange = vi.fn();
+    watchCollapsed(onChange);
+    await fakeBrowser.storage.sync.set({ collapsed: ['12'] });
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });
