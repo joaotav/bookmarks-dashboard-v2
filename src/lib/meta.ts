@@ -36,3 +36,22 @@ export function watchCollapsed(onChange: (ids: string[]) => void): () => void {
   browser.storage.onChanged.addListener(listener);
   return () => browser.storage.onChanged.removeListener(listener);
 }
+
+/**
+ * Moves per-bookmark metadata to new IDs, after a deleted subtree is recreated by undo and
+ * every bookmark in it gets a new ID. `ids` maps each old ID to its new one.
+ */
+export async function moveMeta(ids: Map<string, string>): Promise<void> {
+  const iconKey = (id: string) => `icon:${id}`;
+  const oldIconKeys = [...ids.keys()].map(iconKey);
+  const stored = await browser.storage.local.get([COLLAPSED_KEY, ...oldIconKeys]);
+
+  const changes: Record<string, unknown> = {
+    [COLLAPSED_KEY]: toIds(stored[COLLAPSED_KEY]).map((id) => ids.get(id) ?? id),
+  };
+  for (const [oldId, newId] of ids) {
+    if (stored[iconKey(oldId)] !== undefined) changes[iconKey(newId)] = stored[iconKey(oldId)];
+  }
+  await browser.storage.local.set(changes);
+  await browser.storage.local.remove(oldIconKeys);
+}
