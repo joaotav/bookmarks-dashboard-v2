@@ -1,12 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
-import { create, ensureRoot, getWorkspace, subscribe, update } from '@/lib/bookmarks';
+import { create, ensureRoot, getWorkspace, move, subscribe, update } from '@/lib/bookmarks';
 import { installFakeBookmarks } from '../fixtures/fake-bookmarks';
 import { chromeRoot, firefoxRoot, folder, link, separator } from '../fixtures/trees';
 
 const storedRootId = async () => (await fakeBrowser.storage.local.get('workspaceRootId')).workspaceRootId;
 
 beforeEach(() => fakeBrowser.reset());
+afterEach(() => vi.unstubAllEnvs());
 
 describe('ensureRoot', () => {
   it('creates Workspace in Firefox\'s Other Bookmarks and remembers it', async () => {
@@ -138,5 +139,61 @@ describe('create and update', () => {
     await update('l1', { url: 'https://github.com/sveltejs' });
     expect(find('c1')!.title).toBe('Code');
     expect(find('l1')).toMatchObject({ title: 'GitHub', url: 'https://github.com/sveltejs' });
+  });
+});
+
+describe.each([
+  { browser: 'chrome', indexAfterRemoval: false },
+  { browser: 'firefox', indexAfterRemoval: true },
+])('move in $browser', ({ browser, indexAfterRemoval }) => {
+  const setup = () => {
+    vi.stubEnv('BROWSER', browser);
+    const root = firefoxRoot();
+    root.children![1]!.children!.push(
+      folder('w', 'Workspace', [
+        folder('c1', 'Repos', [
+          link('a', 'A', 'https://a.example'),
+          link('b', 'B', 'https://b.example'),
+          link('c', 'C', 'https://c.example'),
+        ]),
+        folder('c2', 'Docs', [link('d', 'D', 'https://d.example')]),
+        folder('c3', 'Empty'),
+      ]),
+    );
+    const { find } = installFakeBookmarks(root, { indexAfterRemoval });
+    return (id: string) => find(id)!.children!.map((node) => node.title);
+  };
+
+  it('moves down within the same folder', async () => {
+    const titles = setup();
+    await move('a', { parentId: 'c1', before: 'c' });
+    expect(titles('c1')).toEqual(['B', 'A', 'C']);
+  });
+
+  it('moves up within the same folder', async () => {
+    const titles = setup();
+    await move('c', { parentId: 'c1', before: 'a' });
+    expect(titles('c1')).toEqual(['C', 'A', 'B']);
+  });
+
+  it('moves to the end of the same folder', async () => {
+    const titles = setup();
+    await move('a', { parentId: 'c1' });
+    expect(titles('c1')).toEqual(['B', 'C', 'A']);
+  });
+
+  it('moves into another folder, before a link or into an empty folder', async () => {
+    const titles = setup();
+    await move('b', { parentId: 'c2', before: 'd' });
+    await move('c', { parentId: 'c3' });
+    expect(titles('c1')).toEqual(['A']);
+    expect(titles('c2')).toEqual(['B', 'D']);
+    expect(titles('c3')).toEqual(['C']);
+  });
+
+  it('moves folders the same way', async () => {
+    const titles = setup();
+    await move('c1', { parentId: 'w', before: 'c3' });
+    expect(titles('w')).toEqual(['Docs', 'Repos', 'Empty']);
   });
 });
