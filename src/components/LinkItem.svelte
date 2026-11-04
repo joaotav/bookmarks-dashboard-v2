@@ -15,7 +15,11 @@
   {:else}
     <span class="icon tile" style:--hue={tile.hue}>{tile.letter}</span>
   {/if}
-  <span class="title">{link.title}</span>
+  <span class="text">
+    <span class="title">{link.title}</span>
+    <!-- Shown only with the "Title and URL" setting. The tooltip already gives the URL to screen readers. -->
+    <span class="url" aria-hidden="true">{link.url.replace(/^https?:\/\//, '')}</span>
+  </span>
 {/snippet}
 
 {#if link.openable}
@@ -47,9 +51,41 @@
     color: var(--muted);
     cursor: default;
   }
-  .title {
+  .text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .title,
+  .url {
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .url {
+    display: none;
+    color: var(--muted);
+    font-size: 11px;
+  }
+  /* Titles that take more than one line make the row grow, with the icon at the top. */
+  :global(:root:is([data-titles='two-lines'], [data-titles='with-url'])) .link {
+    align-items: flex-start;
+    height: auto;
+    min-height: var(--row-height);
+    padding-block: 6px;
+  }
+  :global(:root:is([data-titles='two-lines'], [data-titles='with-url'])) .icon {
+    margin-top: 1px;
+  }
+  :global(:root[data-titles='two-lines']) .title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  :global(:root[data-titles='with-url']) .url {
+    display: block;
   }
   .icon {
     flex: none;

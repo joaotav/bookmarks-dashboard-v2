@@ -137,6 +137,8 @@ Metadata whose bookmark no longer exists is ignored when read and pruned on star
 
 A missing or partial `settings` object falls back to the defaults field by field, so adding a setting later needs no migration.
 
+The new tab page also keeps a copy of the last applied settings in its own `localStorage`. Unlike `storage.sync`, it can be read before the page first draws, so new tabs open with the right theme instead of flashing the default. `storage.sync` stays the source of truth and overwrites the copy when they differ.
+
 ### View model
 
 The UI never touches `BookmarkTreeNode` directly. `lib/tree.ts` converts the subtree into:

@@ -15,6 +15,12 @@ describe('LinkItem', () => {
     expect(anchor).toHaveAttribute('title', 'GitHub\nhttps://github.com/');
   });
 
+  it('has the URL without its scheme ready for the "Title and URL" setting, hidden from screen readers', () => {
+    render(LinkItem, { link: web });
+    expect(screen.getByText('github.com/')).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByRole('link')).toHaveAccessibleName('GitHub');
+  });
+
   it('shows other links as plain text that cannot be clicked', () => {
     render(LinkItem, { link: { id: 'l2', title: 'Bookmarklet', url: 'javascript:alert(1)', openable: false } });
     expect(screen.queryByRole('link')).toBeNull();
