@@ -35,6 +35,26 @@ function isOpenable(url: string): boolean {
   }
 }
 
+/**
+ * Turns what the user typed into a web address, so "github.com" becomes "https://github.com/".
+ * Returns null for anything that isn't an http or https address, or that carries a username
+ * or password.
+ */
+export function toWebUrl(input: string): string | null {
+  const text = input.trim();
+  // A scheme like "mailto:", but not a port like "localhost:3000".
+  const hasScheme = /^[a-z][a-z\d+.-]*:(?!\d)/i.test(text);
+  try {
+    const url = new URL(hasScheme ? text : `https://${text}`);
+    return OPENABLE_PROTOCOLS.has(url.protocol) && url.hostname && !url.username && !url.password ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The title for a link saved without one: its hostname without "www.". */
+export const defaultTitle = (url: string) => new URL(url).hostname.replace(/^www\./, '');
+
 function toLink(node: { id: string; title: string; url: string }): Link {
   return { id: node.id, title: node.title || node.url, url: node.url, openable: isOpenable(node.url) };
 }
@@ -62,6 +82,9 @@ export function splitEmoji(title: string): { emoji: string | null; name: string 
   if (first && EMOJI.test(first)) return { emoji: first, name: title.slice(first.length).trimStart() };
   return { emoji: null, name: title };
 }
+
+/** The folder name for a space: its emoji, if it has one, then its name. */
+export const joinEmoji = (emoji: string | null, name: string) => (emoji ? `${emoji} ${name}` : name);
 
 /**
  * Converts the Workspace folder's subtree into spaces. Each folder in Workspace is a space,

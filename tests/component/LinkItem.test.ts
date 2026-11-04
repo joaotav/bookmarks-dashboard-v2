@@ -52,4 +52,38 @@ describe('LinkItem', () => {
     expect(document.querySelector('img')).toBeNull();
     expect(screen.getByText('G')).toBeInTheDocument();
   });
+
+  it('can only be edited when it gets an onupdate handler', () => {
+    render(LinkItem, { link: web });
+    expect(screen.queryByRole('button', { name: 'Actions for GitHub' })).toBeNull();
+  });
+
+  it('edits its URL inline, normalizing it and refusing other schemes', async () => {
+    const onupdate = vi.fn();
+    render(LinkItem, { link: web, onupdate });
+    await fireEvent.click(screen.getByRole('button', { name: 'Actions for GitHub' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Edit URL' }));
+    const field = screen.getByRole('textbox', { name: 'URL' });
+    expect(field).toHaveValue('https://github.com/');
+    await fireEvent.input(field, { target: { value: 'javascript:alert(1)' } });
+    await fireEvent.keyDown(field, { key: 'Enter' });
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(onupdate).not.toHaveBeenCalled();
+    await fireEvent.input(field, { target: { value: 'github.com/sveltejs' } });
+    await fireEvent.keyDown(field, { key: 'Enter' });
+    expect(onupdate).toHaveBeenCalledWith({ url: 'https://github.com/sveltejs' });
+    expect(screen.getByRole('link', { name: 'GitHub' })).toBeInTheDocument();
+  });
+
+  it('goes back to its default title when renamed to nothing', async () => {
+    const onupdate = vi.fn();
+    render(LinkItem, { link: { ...web, url: 'https://www.github.com/' }, onupdate });
+    await fireEvent.click(screen.getByRole('button', { name: 'Actions for GitHub' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Rename' }));
+    const field = screen.getByRole('textbox', { name: 'Title' });
+    expect(field).toHaveAttribute('placeholder', 'github.com');
+    await fireEvent.input(field, { target: { value: '' } });
+    await fireEvent.keyDown(field, { key: 'Enter' });
+    expect(onupdate).toHaveBeenCalledWith({ title: 'github.com' });
+  });
 });

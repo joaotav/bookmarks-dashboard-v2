@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { splitEmoji, toSpaces, UNSORTED } from '@/lib/tree';
+import { defaultTitle, joinEmoji, splitEmoji, toSpaces, toWebUrl, UNSORTED } from '@/lib/tree';
 import { folder, link, separator } from '../fixtures/trees';
 
 describe('splitEmoji', () => {
@@ -112,5 +112,51 @@ describe('toSpaces', () => {
 
   it('returns no spaces for an empty Workspace', () => {
     expect(toSpaces(folder('w', 'Workspace'))).toEqual([]);
+  });
+});
+
+describe('joinEmoji', () => {
+  it('puts the emoji before the name, and splitEmoji takes it back off', () => {
+    expect(joinEmoji('🛠️', 'Side projects')).toBe('🛠️ Side projects');
+    expect(splitEmoji(joinEmoji('🛠️', 'Side projects'))).toEqual({ emoji: '🛠️', name: 'Side projects' });
+  });
+
+  it('uses the name alone without an emoji', () => {
+    expect(joinEmoji(null, 'Work')).toBe('Work');
+  });
+});
+
+describe('toWebUrl', () => {
+  it('keeps http and https addresses', () => {
+    expect(toWebUrl('https://github.com/sveltejs')).toBe('https://github.com/sveltejs');
+    expect(toWebUrl('  http://example.com  ')).toBe('http://example.com/');
+  });
+
+  it('adds https:// when there is no scheme', () => {
+    expect(toWebUrl('github.com')).toBe('https://github.com/');
+    expect(toWebUrl('localhost:3000/admin')).toBe('https://localhost:3000/admin');
+  });
+
+  it('refuses addresses that are not web pages', () => {
+    for (const input of ['javascript:alert(1)', 'data:text/html,hi', 'file:///etc/passwd', 'about:config', 'mailto:me@example.com']) {
+      expect(toWebUrl(input), input).toBeNull();
+    }
+  });
+
+  it('refuses empty or malformed input', () => {
+    expect(toWebUrl('')).toBeNull();
+    expect(toWebUrl('not a url')).toBeNull();
+  });
+
+  it('refuses addresses with a username or password', () => {
+    expect(toWebUrl('https://user@example.com/')).toBeNull();
+    expect(toWebUrl('https://:hunter2@example.com/')).toBeNull();
+  });
+});
+
+describe('defaultTitle', () => {
+  it('is the hostname without www.', () => {
+    expect(defaultTitle('https://www.youtube.com/watch?v=1')).toBe('youtube.com');
+    expect(defaultTitle('https://docs.github.com/en')).toBe('docs.github.com');
   });
 });

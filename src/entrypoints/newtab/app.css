@@ -10,6 +10,7 @@
   --muted: #8b8d98;
   --accent: #8b9cf7;
   --border: #33343c;
+  --danger: #f87171;
 
   --card-width: 260px;
   --row-height: 34px;
@@ -30,6 +31,7 @@
   --muted: #737aa2;
   --accent: #7aa2f7;
   --border: #2f334d;
+  --danger: #f7768e;
 }
 
 :root[data-theme='rose-pine'] {
@@ -42,6 +44,7 @@
   --muted: #908caa;
   --accent: #ebbcba;
   --border: #2a273f;
+  --danger: #eb6f92;
 }
 
 :root[data-theme='dracula'] {
@@ -54,6 +57,7 @@
   --muted: #8a90b8;
   --accent: #bd93f9;
   --border: #383a4a;
+  --danger: #ff5555;
 }
 
 :root[data-theme='rose-pine-dawn'] {
@@ -66,6 +70,7 @@
   --muted: #797593;
   --accent: #907aa9;
   --border: #dfdad9;
+  --danger: #b4637a;
 
   color-scheme: light;
 }

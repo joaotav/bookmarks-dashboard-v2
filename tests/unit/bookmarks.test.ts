@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
-import { ensureRoot, getWorkspace, subscribe } from '@/lib/bookmarks';
+import { create, ensureRoot, getWorkspace, subscribe, update } from '@/lib/bookmarks';
 import { installFakeBookmarks } from '../fixtures/fake-bookmarks';
 import { chromeRoot, firefoxRoot, folder, link, separator } from '../fixtures/trees';
 
@@ -115,5 +115,28 @@ describe('subscribe', () => {
     vi.advanceTimersByTime(50);
     expect(onChange).not.toHaveBeenCalled();
     expect(Object.values(events).some((event) => event!.hasListeners())).toBe(false);
+  });
+});
+
+describe('create and update', () => {
+  it('creates folders and links at the end of their parent', async () => {
+    const root = firefoxRoot();
+    root.children![1]!.children!.push(folder('w', 'Workspace', [folder('s1', 'Work')]));
+    const { find } = installFakeBookmarks(root);
+    const space = await create('w', '🏠 Home');
+    const linkId = await create(space, 'GitHub', 'https://github.com/');
+    expect(find('w')!.children!.map((node) => node.title)).toEqual(['Work', '🏠 Home']);
+    expect(find(space)!.children).toEqual([{ id: linkId, title: 'GitHub', url: 'https://github.com/' }]);
+    expect(find(space)!.url).toBeUndefined();
+  });
+
+  it('renames a folder and changes a link\'s URL', async () => {
+    const root = firefoxRoot();
+    root.children![1]!.children!.push(folder('w', 'Workspace', [folder('c1', 'Repos', [link('l1', 'GitHub', 'https://github.com/')])]));
+    const { find } = installFakeBookmarks(root);
+    await update('c1', { title: 'Code' });
+    await update('l1', { url: 'https://github.com/sveltejs' });
+    expect(find('c1')!.title).toBe('Code');
+    expect(find('l1')).toMatchObject({ title: 'GitHub', url: 'https://github.com/sveltejs' });
   });
 });

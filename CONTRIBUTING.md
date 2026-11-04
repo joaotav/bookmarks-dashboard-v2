@@ -1,6 +1,6 @@
 # Contributing
 
-Every change starts as an issue, is made on a branch, and reaches `main` through a pull request that is squash-merged once CI passes.
+Every change except small fixes starts as an issue. Changes are made on a branch and reach `main` through a pull request that is squash-merged once CI passes.
 
 - [Issues](#issues)
 - [Branches and commits](#branches-and-commits)
@@ -14,9 +14,11 @@ Open an issue before starting work, using one of the templates: bug report, feat
 
 Larger efforts get a tracking issue, with the smaller issues attached as sub-issues in the order they should be done. The [MVP tracking issue](https://github.com/joaotav/bookmarks-dashboard-v2/issues/1) lists the milestones in [docs/mvp-plan.md](docs/mvp-plan.md).
 
+Small fixes, like a typo, a broken link or a CI tweak, can skip the issue and go straight to a pull request whose description says why.
+
 ## Branches and commits
 
-Branch off `main`. Branch names start with your GitHub username, followed by a short description: `joaotav/m3-display-settings`.
+Branch off `main`. Branch names start with your GitHub username, then the number of the issue the branch works on, then a short description: `joaotav/7-display-settings`. Branches for small fixes without an issue leave out the number: `joaotav/fix-readme-typo`.
 
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), like `feat: add display settings` or `fix: keep collapse state after undo`. Each commit does one logical thing. Commits are signed, so GitHub shows them as Verified.
 
@@ -25,7 +27,7 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 Each pull request:
 
 - does one thing, which should be clear from its title, description and issue
-- links its issue with `Closes #N`, so merging closes the issue
+- links its issue with `Closes #N`, so merging closes the issue, or with `Part of #N` when the issue takes more than one pull request
 - has a title in Conventional Commits form, because the title becomes the commit subject on `main`, with GitHub adding the PR number: `feat: add display settings (#21)`
 - includes tests and updates docs
 - adds a [changelog](#changelog) entry when users will notice the change

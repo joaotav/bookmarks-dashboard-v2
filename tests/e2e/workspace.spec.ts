@@ -68,9 +68,10 @@ test('puts links directly in Workspace in an extra Unsorted space', async ({ das
   await expect(dashboard.getByRole('link', { name: 'Stray' })).toBeVisible();
 });
 
-test('explains what to do when a space has no categories', async ({ dashboard }) => {
+test('offers to create a category when a space has none', async ({ dashboard }) => {
   await addBookmarks(dashboard, [{ title: 'Empty space', children: [] }]);
-  await expect(dashboard.getByText('This space has no categories yet.', { exact: false })).toBeVisible();
+  await expect(dashboard.getByRole('button', { name: '+ New category' })).toBeVisible();
+  await expect(dashboard.getByRole('heading', { level: 2 })).toHaveCount(0);
 });
 
 test('never runs bookmarks that are not web links, and shows titles as text', async ({ dashboard }) => {

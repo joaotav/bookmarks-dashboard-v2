@@ -10,7 +10,7 @@ ______
 
 ### Checklist
 
-- [ ] Linked to an issue above.
+- [ ] Linked to an issue above, or n/a for a small fix.
 - [ ] Added tests: unit, component or end-to-end, wherever the change can be tested.
 - [ ] Checked by hand in Firefox with `npm run dev:firefox`, or n/a with a note why.
 - [ ] Updated docs: `docs/`, README and code comments.
