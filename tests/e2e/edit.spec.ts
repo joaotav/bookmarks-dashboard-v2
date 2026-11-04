@@ -154,7 +154,10 @@ test('edits a link\'s URL, and Escape leaves it unchanged', async ({ dashboard }
 test('the Unsorted card and tab cannot be renamed', async ({ dashboard }) => {
   await addBookmarks(dashboard, sample);
   await expect(dashboard.getByRole('heading', { name: /^Unsorted/ })).toBeVisible();
-  await expect(dashboard.getByRole('button', { name: 'Actions for Unsorted' })).toHaveCount(0);
+  await dashboard.getByRole('button', { name: 'Actions for Unsorted' }).click();
+  await expect(dashboard.getByRole('button', { name: 'Open all bookmarks' })).toBeVisible();
+  await expect(dashboard.getByRole('button', { name: 'Rename' })).toHaveCount(0);
+  await dashboard.keyboard.press('Escape');
   await expect(dashboard.getByRole('button', { name: 'Actions for Loose link' })).toHaveCount(1);
 
   await addBookmarks(dashboard, [{ title: 'Stray', url: 'https://example.com/stray' }]);
