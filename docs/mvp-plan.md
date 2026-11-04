@@ -332,9 +332,9 @@ Verify: install the signed Firefox build and restart Firefox. The extension is s
 
 ## Open questions and risks
 
-- `bookmarks.move()` index semantics when moving within the same parent. Checked in M5.
+- `bookmarks.move()` index semantics when moving within the same parent. Checked in M5: they differ. Chrome counts the index with the moved item still in its old place, Firefox counts it without, so moving down within the same folder lands one place further in Firefox. `move()` in `lib/bookmarks.ts` takes the bookmark to go before and subtracts one in Firefox.
 - Whether `activeTab` exposes `favIconUrl` to the popup in Firefox. Checked in M6. If it doesn't, Firefox falls back to letter tiles.
-- `svelte-dnd-action` with zones nested inside other zones. Prototype in M5 before building the full UI around it.
+- `svelte-dnd-action` with zones nested inside other zones. Checked in M5: works with drag handles, since an item inside another item starts its own drag only.
 - The name `Workspace` is hardcoded. If a folder with that name already exists, the extension adopts it. Acceptable for the MVP.
 
 ## After the MVP

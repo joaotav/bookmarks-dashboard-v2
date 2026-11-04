@@ -18,8 +18,11 @@ export function fakeEvent() {
  * Replaces `browser.bookmarks` in WXT's fake browser, which doesn't implement it, with an
  * in-memory tree. Covers the calls src/lib/bookmarks.ts makes. Returns the tree, so tests can
  * inspect it, and the events, so tests can fire them.
+ *
+ * `move` counts the index the way Chrome does, with the moved node still in its old place.
+ * `indexAfterRemoval` counts it the way Firefox does, without it.
  */
-export function installFakeBookmarks(root: BookmarkNode, { childrenReordered = true } = {}) {
+export function installFakeBookmarks(root: BookmarkNode, { childrenReordered = true, indexAfterRemoval = false } = {}) {
   const find = (id: string, node: BookmarkNode = root): BookmarkNode | undefined =>
     node.id === id ? node : node.children?.map((child) => find(id, child)).find(Boolean);
   const all = (node: BookmarkNode): BookmarkNode[] => [node, ...(node.children ?? []).flatMap(all)];
@@ -47,7 +50,7 @@ export function installFakeBookmarks(root: BookmarkNode, { childrenReordered = t
     async get(id: string) {
       const node = find(id);
       if (!node) throw new Error(`Can't find bookmark for id.`);
-      return [withoutChildren(node)];
+      return [withoutChildren(withPosition(node))];
     },
     getTree: async () => [clone(root)],
     async getSubTree(id: string) {
@@ -84,6 +87,19 @@ export function installFakeBookmarks(root: BookmarkNode, { childrenReordered = t
       const index = parent.children!.findIndex((child) => child.id === id);
       const [node] = parent.children!.splice(index, 1);
       events.onRemoved.fire(id, { parentId: parent.id, index, node: withoutChildren(node!) });
+    },
+    async move(id: string, { parentId, index }: { parentId?: string; index?: number }) {
+      const node = find(id);
+      const oldParent = parentOf(id);
+      const newParent = parentId === undefined ? oldParent : find(parentId);
+      if (!node || !oldParent || !newParent?.children) throw new Error(`Can't find bookmark for id.`);
+      const oldIndex = oldParent.children!.indexOf(node);
+      oldParent.children!.splice(oldIndex, 1);
+      let newIndex = index ?? newParent.children.length;
+      if (index !== undefined && !indexAfterRemoval && newParent === oldParent && index > oldIndex) newIndex--;
+      newParent.children.splice(newIndex, 0, node);
+      events.onMoved.fire(id, { parentId: newParent.id, index: newIndex, oldParentId: oldParent.id, oldIndex });
+      return withoutChildren(withPosition(node));
     },
     async update(id: string, changes: { title?: string; url?: string }) {
       const node = find(id);

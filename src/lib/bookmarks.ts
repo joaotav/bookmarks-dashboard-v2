@@ -49,6 +49,23 @@ export async function update(id: string, changes: { title?: string; url?: string
 }
 
 /**
+ * Moves a folder or link to just before `before`, in whatever folder that is, or to the end
+ * of `parentId` when there is no `before`.
+ */
+export async function move(id: string, { parentId, before }: { parentId: string; before?: string }): Promise<void> {
+  if (before === undefined) {
+    await browser.bookmarks.move(id, { parentId });
+    return;
+  }
+  const [[node], [target]] = await Promise.all([browser.bookmarks.get(id), browser.bookmarks.get(before)]);
+  let index = target!.index!;
+  // Chrome counts the index with the moved item still in its old place, Firefox without it.
+  // They only disagree when moving down within the same folder.
+  if (import.meta.env.BROWSER === 'firefox' && node!.parentId === target!.parentId && node!.index! < index) index--;
+  await browser.bookmarks.move(id, { parentId: target!.parentId, index });
+}
+
+/**
  * Calls `onChange` after any bookmark change, wherever it came from: this page, the browser's
  * bookmark manager or sync. Bursts of events, like a sync, are debounced into one call.
  * Returns a function that stops listening.

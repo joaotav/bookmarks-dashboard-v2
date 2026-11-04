@@ -94,7 +94,7 @@ test('refuses to add an address that is not a web page', async ({ dashboard }) =
   await dashboard.getByRole('button', { name: '+ Add bookmark' }).click();
   await dashboard.getByRole('textbox', { name: 'URL' }).fill('javascript:alert(1)');
   await dashboard.keyboard.press('Enter');
-  await expect(dashboard.getByRole('alert')).toHaveText('Enter a web address, like example.com');
+  await expect(dashboard.getByText('Enter a web address, like example.com')).toHaveRole('alert');
   await dashboard.keyboard.press('Escape');
   await expect(dashboard.getByRole('textbox', { name: 'URL' })).toBeHidden();
   await expect(dashboard.getByRole('link')).toHaveCount(0);
@@ -144,7 +144,7 @@ test('edits a link\'s URL, and Escape leaves it unchanged', async ({ dashboard }
 
   await (await editUrl()).fill('mailto:me@example.com');
   await dashboard.keyboard.press('Enter');
-  await expect(dashboard.getByRole('alert')).toHaveText('Enter a web address, like example.com');
+  await expect(dashboard.getByText('Enter a web address, like example.com')).toHaveRole('alert');
   await dashboard.getByRole('textbox', { name: 'URL' }).fill('github.com/sveltejs');
   await dashboard.keyboard.press('Enter');
   await expect(dashboard.getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/sveltejs');

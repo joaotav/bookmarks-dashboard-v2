@@ -7,7 +7,7 @@ const links: Link[] = [
   { id: 'l1', title: 'GitHub', url: 'https://github.com', openable: true },
   { id: 'l2', title: 'GitLab', url: 'https://gitlab.com', openable: true },
 ];
-const props = { id: 'c1', title: 'Repos', links, collapsed: false, ontoggle: () => {}, onadd: () => {}, onupdatelink: () => {}, ondeletelink: () => {}, onopenall: () => {} };
+const props = { id: 'c1', title: 'Repos', links, collapsed: false, ontoggle: () => {}, onadd: () => {}, onupdatelink: () => {}, ondeletelink: () => {}, onopenall: () => {}, onmovelink: () => {} };
 
 describe('CategoryCard', () => {
   it('shows the category name, its link count and its links', () => {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { iconFor, letterTile } from '@/lib/icons';
   import { defaultTitle, toWebUrl, type Link } from '@/lib/tree';
+  import Grip from './Grip.svelte';
   import InlineInput from './InlineInput.svelte';
   import Menu from './Menu.svelte';
 
@@ -64,6 +65,10 @@
       {@render content()}
     </span>
   {/if}
+  {#if !editing}
+    <!-- Over the icon, so the rest of the link can still be dragged out to the toolbar or another window. -->
+    <Grip label="Move {link.title}" />
+  {/if}
   {#if onupdate && !editing}
     <Menu
       label="Actions for {link.title}"
@@ -87,8 +92,19 @@
     position: absolute;
     right: 6px;
   }
-  .row:not(:hover, :focus-within) > :global(.menu:not(.open)) {
+  .row:not(:hover, :focus-within) > :global(:is(.menu:not(.open), .grip)) {
     opacity: 0;
+  }
+  /* Covers the icon and the space before the title, the whole height of the row. */
+  .row > :global(.grip) {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 32px;
+    height: auto;
+    border-radius: 6px 0 0 6px;
+    background: var(--row-hover);
   }
   .row > :global(.menu:not(.open) .toggle:not(:hover)) {
     background: var(--row-hover);
@@ -139,6 +155,11 @@
   }
   :global(:root:is([data-titles='two-lines'], [data-titles='with-url'])) .icon {
     margin-top: 1px;
+  }
+  /* Level with the icon, which sits at the top of rows taller than one line. */
+  :global(:root:is([data-titles='two-lines'], [data-titles='with-url'])) .row > :global(.grip) {
+    align-items: start;
+    padding-top: 7px;
   }
   :global(:root[data-titles='two-lines']) .title {
     display: -webkit-box;
