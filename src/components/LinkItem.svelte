@@ -1,12 +1,29 @@
 <script lang="ts">
   import { iconFor, letterTile } from '@/lib/icons';
-  import type { Link } from '@/lib/tree';
+  import { defaultTitle, toWebUrl, type Link } from '@/lib/tree';
+  import InlineInput from './InlineInput.svelte';
+  import Menu from './Menu.svelte';
 
-  let { link }: { link: Link } = $props();
+  let {
+    link,
+    onupdate,
+  }: {
+    link: Link;
+    /** Renames the link or changes its URL. Without it, the link can't be edited. */
+    onupdate?: (changes: { title?: string; url?: string }) => void;
+  } = $props();
 
   const icon = $derived(iconFor(link));
   const tile = $derived(letterTile(link));
   let iconFailed = $state(false);
+  let editing = $state<'title' | 'url' | null>(null);
+
+  function saveUrl(text: string) {
+    const url = toWebUrl(text);
+    if (!url) return 'Enter a web address, like example.com';
+    onupdate?.({ url });
+    editing = null;
+  }
 </script>
 
 {#snippet content()}
@@ -22,16 +39,60 @@
   </span>
 {/snippet}
 
-{#if link.openable}
-  <a class="link" href={link.url} title={`${link.title}\n${link.url}`}>{@render content()}</a>
-{:else}
-  <span class="link disabled" title={`${link.title}\n${link.url}\nOnly web links can be opened from this page.`}>
-    {@render content()}
-  </span>
-{/if}
+<div class="row">
+  {#if editing === 'title'}
+    <!-- An empty title goes back to the default, the same as adding a link without one. -->
+    <InlineInput
+      value={link.title}
+      label="Title"
+      placeholder={defaultTitle(link.url)}
+      allowEmpty
+      onsave={(title) => {
+        onupdate?.({ title: title || defaultTitle(link.url) });
+        editing = null;
+      }}
+      oncancel={() => (editing = null)}
+    />
+  {:else if editing === 'url'}
+    <InlineInput value={link.url} label="URL" onsave={saveUrl} oncancel={() => (editing = null)} />
+  {:else if link.openable}
+    <a class="link" href={link.url} title={`${link.title}\n${link.url}`}>{@render content()}</a>
+  {:else}
+    <span class="link disabled" title={`${link.title}\n${link.url}\nOnly web links can be opened from this page.`}>
+      {@render content()}
+    </span>
+  {/if}
+  {#if onupdate && !editing}
+    <Menu
+      label="Actions for {link.title}"
+      items={[
+        { label: 'Rename', onselect: () => (editing = 'title') },
+        { label: 'Edit URL', onselect: () => (editing = 'url') },
+      ]}
+    />
+  {/if}
+</div>
 
 <style>
+  .row {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  /* The menu button sits over the end of the row and shows on hover or keyboard focus. */
+  .row > :global(.menu) {
+    position: absolute;
+    right: 6px;
+  }
+  .row:not(:hover, :focus-within) > :global(.menu:not(.open)) {
+    opacity: 0;
+  }
+  .row > :global(.menu:not(.open) .toggle:not(:hover)) {
+    background: var(--row-hover);
+  }
   .link {
+    flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
     gap: 8px;
