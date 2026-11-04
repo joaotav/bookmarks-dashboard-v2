@@ -1,0 +1,458 @@
+<!doctype html>
+<!--
+  PROTOTYPE, throwaway. Not part of the extension.
+  Question: how should the category cards be arranged under a top bar with space tabs (left) and search (right)?
+  Four layouts switchable via ?variant=A|B|C|D, plus theme and density, from the floating bar at the bottom.
+  Open this file directly in the browser. Nothing is saved.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE new tab layout</title>
+<style>
+  :root { --card-min: 260px; }
+  :root { --row-h: 34px; --row-gap: 6px; --card-pad: 12px; --font: 13px; --bar-h: 52px; }
+  [data-density="compact"] { --row-h: 26px; --row-gap: 2px; --card-pad: 8px; --font: 12.5px; }
+
+  [data-theme="neutral"]  { --bg:#1c1d22; --bar:#202127; --card:#25262c; --row:#2f3038; --row-hover:#3a3b45; --fg:#e4e4e7; --muted:#8b8d98; --accent:#8b9cf7; --border:#33343c; }
+  [data-theme="tokyo"]    { --bg:#1a1b26; --bar:#16161e; --card:#1f2335; --row:#292e42; --row-hover:#343a55; --fg:#c0caf5; --muted:#737aa2; --accent:#7aa2f7; --border:#2f334d; }
+  [data-theme="rosepine"] { --bg:#191724; --bar:#1f1d2e; --card:#1f1d2e; --row:#26233a; --row-hover:#403d52; --fg:#e0def4; --muted:#908caa; --accent:#ebbcba; --border:#2a273f; }
+  [data-theme="dracula"]  { --bg:#21222c; --bar:#191a21; --card:#282a36; --row:#343746; --row-hover:#44475a; --fg:#f8f8f2; --muted:#8a90b8; --accent:#bd93f9; --border:#383a4a; }
+  [data-theme="dawn"]     { --bg:#faf4ed; --bar:#f2e9e1; --card:#fffaf3; --row:#f2e9e1; --row-hover:#dfdad9; --fg:#575279; --muted:#797593; --accent:#907aa9; --border:#dfdad9; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: var(--font)/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+  /* Top bar: tabs left, search and settings right */
+  .bar { position: sticky; top: 0; z-index: 10; height: var(--bar-h); display: flex; align-items: center; gap: 8px; padding: 0 16px; background: var(--bar); border-bottom: 1px solid var(--border); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tabs-wrap { position: relative; display: flex; align-items: center; gap: 2px; }
+  .tab { position: relative; z-index: 1; display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: 8px; color: var(--muted); font-weight: 500; transition: color .15s, background .15s; }
+  .tab:hover, .tab.active { color: var(--fg); }
+  .tab .emoji { font-size: 14px; line-height: 1; }
+  .tab .badge { min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--row); color: var(--muted); font-size: 11px; line-height: 18px; text-align: center; }
+  .tab.active .badge { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--fg); }
+  [data-extras="none"] .tab .emoji, [data-extras="none"] .tab .badge, [data-extras="icons"] .tab .badge { display: none; }
+  .icon-btn { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px; color: var(--muted); transition: color .15s, background .15s; }
+  .icon-btn:hover { background: var(--row); color: var(--fg); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .indicator { position: absolute; z-index: 0; left: 0; pointer-events: none; transition: transform .25s cubic-bezier(.3,.7,.4,1), width .25s cubic-bezier(.3,.7,.4,1); }
+
+  /* Tab style: underline, an accent line slides under the active tab */
+  [data-tabs="underline"] .tab:hover { background: var(--row); }
+  [data-tabs="underline"] .indicator { bottom: -9px; height: 2px; border-radius: 2px; background: var(--accent); }
+
+  /* Tab style: pill, a segmented control with a raised pill that slides */
+  [data-tabs="pill"] .tabs-wrap { padding: 3px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); }
+  [data-tabs="pill"] .tab { height: 30px; }
+  [data-tabs="pill"] .indicator { top: 3px; height: 30px; border-radius: 7px; background: var(--row-hover); box-shadow: 0 1px 3px #0004; }
+
+  /* Tab style: browser, the active tab joins the page below */
+  [data-tabs="browser"] .bar { align-items: stretch; }
+  [data-tabs="browser"] .bar > :not(.tabs-wrap) { align-self: center; }
+  [data-tabs="browser"] .tabs-wrap { align-items: flex-end; }
+  [data-tabs="browser"] .tab { height: 40px; margin-bottom: -1px; border-radius: 10px 10px 0 0; border: 1px solid transparent; border-bottom: 0; }
+  [data-tabs="browser"] .tab:hover:not(.active) { background: var(--row); }
+  [data-tabs="browser"] .tab.active { background: var(--bg); border-color: var(--border); box-shadow: inset 0 2px 0 var(--accent); }
+  [data-tabs="browser"] .indicator { display: none; }
+  .search { position: relative; margin-left: auto; width: min(340px, 45vw); }
+  .search input { width: 100%; height: 34px; padding: 0 34px 0 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--fg); font: inherit; outline: none; }
+  .search input:focus { border-color: var(--accent); }
+  .search kbd { position: absolute; right: 8px; top: 7px; padding: 0 6px; border-radius: 4px; border: 1px solid var(--border); color: var(--muted); font: 11px/18px monospace; }
+  .results { position: absolute; top: 40px; right: 0; width: 100%; max-height: 70vh; overflow-y: auto; padding: 6px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); box-shadow: 0 12px 32px #0006; }
+  .results:empty { display: none; }
+  .result { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 6px; color: var(--fg); text-decoration: none; }
+  .result.sel { background: var(--row-hover); }
+  .result small { display: block; color: var(--muted); font-size: 11px; }
+  .result mark { background: none; color: var(--accent); font-weight: 600; }
+  .no-results { padding: 10px; color: var(--muted); }
+
+  main { padding: 20px; }
+
+  /* Card pieces shared by every layout */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: var(--card-pad); }
+  .card-head { display: flex; align-items: center; gap: 6px; width: 100%; padding: 2px 4px 8px; }
+  .card-head .collapse { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; text-align: left; font-weight: 600; }
+  .card-head .widen { padding: 0 4px; border-radius: 4px; color: var(--muted); opacity: 0; }
+  .card:hover .widen, .card.wide .widen { opacity: 1; }
+  .card-head .widen:hover { background: var(--row); color: var(--fg); }
+  .layout-A .card.wide { grid-column: span 2; }
+  /* Sizing: fit content. Cards flow and wrap like words, each as wide as its longest link, capped at two columns */
+  [data-fit="content"] .layout-A .cards { display: flex; flex-wrap: wrap; align-items: flex-start; }
+  [data-fit="content"] .layout-A .card { width: max-content; min-width: var(--card-min); max-width: calc(2 * var(--card-min) + 16px); }
+  [data-fit="content"] .layout-A .add-card { width: var(--card-min); }
+  [data-fit="content"] .layout-C .card { flex: 0 0 auto; width: max-content; min-width: var(--card-min); max-width: calc(2 * var(--card-min) + 14px); }
+  [data-fit="content"] .layout-C .card.wide { flex-basis: auto; }
+  /* Sizing: auto span. Grid stays, a card spans two columns when its longest title doesn't fit in one */
+  [data-fit="auto"] .layout-A .card.auto-wide { grid-column: span 2; }
+  [data-fit="content"] .widen, [data-fit="auto"] .widen { display: none; }
+  [data-fit="auto"] .layout-A .card.wide:not(.auto-wide) { grid-column: auto; }
+  .layout-C .card.wide { flex-basis: calc(2 * var(--card-min) + 14px); }
+  .card-head .chev { width: 14px; color: var(--muted); transition: transform .15s; }
+  .card.collapsed .chev { transform: rotate(-90deg); }
+  .card.collapsed .card-head { padding-bottom: 2px; }
+  .card-head .count { color: var(--muted); font-weight: 400; font-size: 11px; }
+  .card.collapsed .links, .card.collapsed .add-row { display: none; }
+  .link { display: flex; align-items: center; gap: 8px; height: var(--row-h); padding: 0 8px; margin-bottom: var(--row-gap); border-radius: 6px; background: var(--row); color: var(--fg); text-decoration: none; white-space: nowrap; overflow: hidden; }
+  .link:hover { background: var(--row-hover); }
+  .link span.t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .icon { position: relative; flex: 0 0 16px; width: 16px; height: 16px; border-radius: 4px; color: #fff; font: 700 10px/16px system-ui; text-align: center; }
+  .icon img { position: absolute; inset: 0; width: 16px; height: 16px; border-radius: 3px; background: var(--row); }
+  /* Title display modes */
+  [data-titles="wrap"] .link, [data-titles="detail"] .link { height: auto; min-height: var(--row-h); padding-top: 6px; padding-bottom: 6px; align-items: flex-start; white-space: normal; }
+  [data-titles="wrap"] .link .icon, [data-titles="detail"] .link .icon { margin-top: 1px; }
+  [data-titles="wrap"] .link span.t { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  [data-titles="detail"] .link span.t { display: flex; flex-direction: column; min-width: 0; }
+  .link .u { display: none; }
+  [data-titles="detail"] .link .u { display: block; color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  [data-titles="detail"] .link .tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .layout-D .link span.t { -webkit-line-clamp: unset; }
+  /* Subgroups */
+  .sub { margin-bottom: var(--row-gap); }
+  .sub-head { display: flex; align-items: center; gap: 6px; width: 100%; padding: 4px; color: var(--muted); font-size: 12px; font-weight: 600; text-align: left; }
+  .sub-head:hover { color: var(--fg); }
+  .sub-head .chev { width: 12px; transition: transform .15s; }
+  .sub.collapsed .sub-head .chev { transform: rotate(-90deg); }
+  .sub-head .count { margin-left: auto; font-weight: 400; font-size: 11px; }
+  .sub-links { margin-left: 10px; padding-left: 8px; border-left: 2px solid var(--border); }
+  .sub.collapsed .sub-links { display: none; }
+  .layout-D .sub { flex-basis: 100%; }
+  .layout-D .sub-links { display: flex; flex-wrap: wrap; gap: 6px; }
+  .add-row { display: block; width: 100%; padding: 6px 8px 0; text-align: left; color: var(--muted); font-size: 12px; }
+  .add-row:hover, .add-card:hover { color: var(--fg); }
+  .add-card { border: 1px dashed var(--border); border-radius: 10px; padding: 14px; color: var(--muted); text-align: center; }
+
+  /* A: grid, rows line up, short cards leave a gap below */
+  .layout-A .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr)); gap: 16px; align-items: start; }
+
+  /* B: masonry, cards stack tightly in columns, order runs top to bottom */
+  .layout-B .cards { columns: var(--card-min); column-gap: 16px; }
+  .layout-B .card, .layout-B .add-card { break-inside: avoid; margin-bottom: 16px; }
+
+  /* C: board, fixed-width columns side by side, each scrolls on its own */
+  .layout-C main { padding-bottom: 0; }
+  .layout-C .cards { display: flex; gap: 14px; align-items: flex-start; overflow-x: auto; height: calc(100vh - var(--bar-h) - 20px); padding-bottom: 70px; }
+  .layout-C .card { flex: 0 0 var(--card-min); max-height: 100%; display: flex; flex-direction: column; }
+  .layout-C .links { overflow-y: auto; }
+  .layout-C .add-card { flex: 0 0 200px; }
+
+  /* D: sections, one category per full-width row, links wrap as chips */
+  .layout-D .cards { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+  .layout-D .links { display: flex; flex-wrap: wrap; gap: 6px; }
+  .layout-D .link { margin: 0; max-width: 260px; padding: 0 10px; }
+  .layout-D .add-row { display: inline-block; width: auto; padding: 8px 4px 0; }
+  .layout-D .card.collapsed .card-head { padding-bottom: 0; }
+
+  /* Prototype switcher, deliberately not themed */
+  .proto { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; background: #000d; color: #fff; font: 12px system-ui; box-shadow: 0 6px 20px #0008; }
+  .proto button { padding: 2px 8px; border-radius: 999px; }
+  .proto button:hover { background: #fff2; }
+  .proto .label { min-width: 150px; text-align: center; }
+  .proto select { background: #222; color: #fff; border: 1px solid #555; border-radius: 6px; font: inherit; padding: 2px 4px; }
+  .proto .sep { width: 1px; height: 18px; background: #555; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="tabs-wrap" id="tabs-wrap"><nav id="tabs" style="display:contents"></nav><span class="indicator" id="indicator"></span></div>
+  <button class="icon-btn" title="New space"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <div class="search">
+    <input id="q" placeholder="Search all spaces" autocomplete="off" spellcheck="false">
+    <kbd>/</kbd>
+    <div class="results" id="results"></div>
+  </div>
+  <button class="icon-btn" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+</header>
+<main><div class="cards" id="cards"></div></main>
+
+<div class="proto">
+  <button id="prev" title="Previous layout (←)">←</button>
+  <span class="label" id="label"></span>
+  <button id="next" title="Next layout (→)">→</button>
+  <span class="sep"></span>
+  <select id="theme">
+    <option value="tokyo">Tokyo Night</option>
+    <option value="rosepine">Rosé Pine</option>
+    <option value="dracula">Dracula</option>
+    <option value="neutral">Neutral dark</option>
+    <option value="dawn">Rosé Pine Dawn (light)</option>
+  </select>
+  <select id="density">
+    <option value="comfortable">Comfortable</option>
+    <option value="compact">Compact</option>
+  </select>
+  <select id="fit" title="Card sizing (grid only)">
+    <option value="fixed">Sizing: fixed</option>
+    <option value="content">Sizing: fit content</option>
+  </select>
+  <select id="tabstyle">
+    <option value="underline">Tabs: underline</option>
+    <option value="pill">Tabs: pill</option>
+    <option value="browser">Tabs: browser</option>
+  </select>
+  <select id="extras">
+    <option value="none">Tab extras: none</option>
+    <option value="icons">Tab extras: icons</option>
+    <option value="counts">Tab extras: icons + counts</option>
+  </select>
+  <select id="titles">
+    <option value="truncate">Titles: one line</option>
+    <option value="wrap">Titles: up to two lines</option>
+    <option value="detail">Titles: title + URL</option>
+  </select>
+</div>
+
+<script>
+const VARIANTS = { A: "Grid", B: "Masonry", C: "Board", D: "Sections" };
+
+// Fake data. Category sizes vary on purpose so the layouts differ.
+const L = (title, url) => ({ title, url });
+const F = (folder, links) => ({ folder, links }); // subgroup: a folder inside a category
+const DATA = {
+  "Work": {
+    "Daily": [L("Gmail", "https://mail.google.com"), L("Calendar", "https://calendar.google.com"), L("Slack", "https://slack.com"), L("Linear", "https://linear.app"), L("Notion", "https://notion.so")],
+    "Repos": [
+      L("api-server · main branch", "https://github.com/acme/api-server"),
+      L("api-server · PR #482 Rate limit the login endpoint", "https://github.com/acme/api-server/pull/482"),
+      L("api-server · PR #479 Migrate to Postgres 17", "https://github.com/acme/api-server/pull/479"),
+      L("api-server · Issue #455 Timeouts on large CSV exports", "https://github.com/acme/api-server/issues/455"),
+      L("api-server · Actions: nightly build", "https://github.com/acme/api-server/actions/workflows/nightly.yml"),
+      L("web-app · Open pull requests", "https://github.com/acme/web-app/pulls"),
+      L("web-app · Release v2.4.0 checklist", "https://github.com/acme/web-app/issues/1203"),
+      L("infra · Terraform modules README", "https://github.com/acme/infra/blob/main/modules/README.md"),
+      L("Review requests assigned to me", "https://github.com/pulls/review-requested"),
+      L("Sentry · api-server errors, last 24h", "https://sentry.io"),
+    ],
+    "Docs": [L("MDN Web Docs", "https://developer.mozilla.org"), L("TypeScript handbook", "https://www.typescriptlang.org/docs/"), L("Can I use", "https://caniuse.com")],
+    "Meetings": [L("Zoom", "https://zoom.us"), L("Google Meet", "https://meet.google.com")],
+    "Reading list": [L("Hacker News", "https://news.ycombinator.com"), L("Lobsters", "https://lobste.rs"), L("Josh W. Comeau", "https://www.joshwcomeau.com"), L("Smashing Magazine", "https://www.smashingmagazine.com"), L("web.dev", "https://web.dev"), L("CSS-Tricks", "https://css-tricks.com")],
+    "Clients": [L("HubSpot", "https://hubspot.com"), L("Calendly", "https://calendly.com"), L("Typeform", "https://typeform.com"), L("Airtable", "https://airtable.com")],
+  },
+  "Research": {
+    "Papers": [L("Google Scholar", "https://scholar.google.com"), L("arXiv", "https://arxiv.org"), L("Semantic Scholar", "https://www.semanticscholar.org"), L("Connected Papers", "https://www.connectedpapers.com"), L("Zotero", "https://www.zotero.org")],
+    "Writing": [L("Overleaf", "https://www.overleaf.com"), L("Grammarly", "https://www.grammarly.com"), L("DeepL", "https://www.deepl.com")],
+    "Data & tools": [L("Kaggle", "https://www.kaggle.com"), L("Hugging Face", "https://huggingface.co"), L("Google Colab", "https://colab.research.google.com"), L("Jupyter", "https://jupyter.org")],
+  },
+  "Side projects": {
+    "bookmarks-dashboard": [
+      L("bookmarks-dashboard-v2 · repo", "https://github.com/you/bookmarks-dashboard-v2"),
+      L("bookmarks-dashboard-v2 · Issue #3 Drag links between categories", "https://github.com/you/bookmarks-dashboard-v2/issues/3"),
+      L("WXT · Docs: Entrypoints", "https://wxt.dev/guide/essentials/entrypoints.html"),
+      L("WXT · GitHub issues", "https://github.com/wxt-dev/wxt/issues"),
+      L("Svelte · Docs: the $state rune", "https://svelte.dev/docs/svelte/$state"),
+      L("Svelte · Tutorial: Transitions", "https://svelte.dev/tutorial/svelte/transition"),
+      L("svelte-dnd-action · README, nested zones", "https://github.com/isaacHagoel/svelte-dnd-action#readme"),
+      L("uFuzzy · README", "https://github.com/leeoniya/uFuzzy"),
+      L("MDN · bookmarks.move()", "https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/bookmarks/move"),
+      L("Chrome · chrome.bookmarks API reference", "https://developer.chrome.com/docs/extensions/reference/api/bookmarks"),
+    ],
+    "Ideas": [L("Excalidraw", "https://excalidraw.com"), L("Are.na", "https://www.are.na")],
+    "Inspiration": [L("r/startpages", "https://www.reddit.com/r/startpages/"), L("Dribbble", "https://dribbble.com"), L("Mobbin", "https://mobbin.com")],
+  },
+  "Home": {
+    "Finance": [L("Bank", "https://example.com"), L("Budget sheet", "https://docs.google.com/spreadsheets")],
+    "Media": [L("YouTube", "https://youtube.com"), L("Spotify", "https://open.spotify.com"), L("Letterboxd", "https://letterboxd.com")],
+  },
+};
+
+const params = new URLSearchParams(location.search);
+const state = {
+  variant: VARIANTS[params.get("variant")] ? params.get("variant") : "A",
+  theme: params.get("theme") || "neutral",
+  density: params.get("density") || "comfortable",
+  titles: params.get("titles") || "truncate",
+  width: params.get("width") || "narrow",
+  fit: params.get("fit") || "content",
+  tabs: params.get("tabs") || "pill",
+  extras: params.get("extras") || "icons",
+  wide: new Set(),
+  space: Object.keys(DATA)[0],
+  collapsed: new Set(),
+  sel: 0,
+};
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const host = (url) => new URL(url).hostname.replace(/^www\./, "");
+
+function icon(url) {
+  const h = host(url);
+  let hash = 0; for (const c of h) hash = (hash * 31 + c.charCodeAt(0)) | 0;
+  const span = el("span", "icon", h[0].toUpperCase());
+  span.style.background = `hsl(${Math.abs(hash) % 360} 45% 45%)`;
+  const img = new Image(); img.alt = "";
+  img.onerror = () => img.remove();
+  img.src = `https://${new URL(url).hostname}/favicon.ico`;
+  span.append(img);
+  return span;
+}
+
+function linkEl(l) {
+  const a = el("a", "link"); a.href = l.url; a.title = l.title + "\n" + l.url;
+  const u = new URL(l.url);
+  const t = el("span", "t");
+  t.append(el("span", "tt", l.title), el("span", "u", host(l.url) + (u.pathname === "/" ? "" : u.pathname) + u.hash));
+  a.append(icon(l.url), t);
+  return a;
+}
+
+const SPACE_ICONS = { "Work": "💼", "Research": "🔬", "Side projects": "🛠️", "Home": "🏠" };
+
+// The indicator element persists across renders, so moving it animates between tabs
+function moveIndicator() {
+  const active = document.querySelector(".tab.active");
+  if (!active) return;
+  $("indicator").style.width = active.offsetWidth + "px";
+  $("indicator").style.transform = `translateX(${active.offsetLeft}px)`;
+}
+addEventListener("resize", moveIndicator);
+document.fonts.ready.then(moveIndicator);
+
+const countLinks = (items) => items.reduce((n, i) => n + (i.folder ? i.links.length : 1), 0);
+const toggle = (key) => { state.collapsed.has(key) ? state.collapsed.delete(key) : state.collapsed.add(key); render(); };
+
+function render() {
+  document.documentElement.dataset.theme = state.theme;
+  document.documentElement.dataset.density = state.density;
+  document.body.className = "layout-" + state.variant;
+  $("label").textContent = `${state.variant} (${VARIANTS[state.variant]})`;
+  $("theme").value = state.theme;
+  document.documentElement.dataset.titles = state.titles;
+  $("density").value = state.density;
+  $("titles").value = state.titles;
+  document.documentElement.dataset.width = state.width;
+  
+  document.documentElement.dataset.fit = state.fit;
+  $("fit").value = state.fit;
+  document.documentElement.dataset.tabs = state.tabs;
+  document.documentElement.dataset.extras = state.extras;
+  $("tabstyle").value = state.tabs;
+  $("extras").value = state.extras;
+  history.replaceState(null, "", `?variant=${state.variant}&theme=${state.theme}&density=${state.density}&titles=${state.titles}&fit=${state.fit}&tabs=${state.tabs}&extras=${state.extras}`);
+
+  $("tabs").replaceChildren(...Object.keys(DATA).map((s) => {
+    const b = el("button", "tab" + (s === state.space ? " active" : ""));
+    const total = Object.values(DATA[s]).reduce((n, items) => n + countLinks(items), 0);
+    b.append(el("span", "emoji", SPACE_ICONS[s]), el("span", null, s), el("span", "badge", total));
+    b.onclick = () => { state.space = s; render(); };
+    return b;
+  }));
+  moveIndicator();
+
+  const cards = Object.entries(DATA[state.space]).map(([cat, links]) => {
+    const key = state.space + "/" + cat;
+    const card = el("section", "card" + (state.collapsed.has(key) ? " collapsed" : "") + (state.wide.has(key) ? " wide" : ""));
+    const head = el("div", "card-head");
+    const collapse = el("button", "collapse");
+    collapse.append(el("span", "chev", "▾"), el("span", null, cat));
+    collapse.onclick = () => toggle(key);
+    const widen = el("button", "widen", state.wide.has(key) ? "⇥⇤" : "⇤⇥");
+    widen.title = state.wide.has(key) ? "Make this card normal width" : "Make this card span two columns";
+    widen.onclick = () => { state.wide.has(key) ? state.wide.delete(key) : state.wide.add(key); render(); };
+    head.append(collapse, el("span", "count", countLinks(links)));
+    const list = el("div", "links");
+    list.append(...links.map((item) => {
+      if (!item.folder) return linkEl(item);
+      const subKey = key + "/" + item.folder;
+      const sub = el("div", "sub" + (state.collapsed.has(subKey) ? " collapsed" : ""));
+      const subHead = el("button", "sub-head");
+      subHead.append(el("span", "chev", "▾"), el("span", null, item.folder), el("span", "count", item.links.length));
+      subHead.onclick = () => toggle(subKey);
+      const subLinks = el("div", "sub-links");
+      subLinks.append(...item.links.map(linkEl));
+      sub.append(subHead, subLinks);
+      return sub;
+    }));
+    card.append(head, list, el("button", "add-row", "+ Add bookmark"));
+    return card;
+  });
+  $("cards").replaceChildren(...cards, el("button", "add-card", "+ Add category"));
+  autoSpan();
+}
+
+// Auto span: measure each title's natural one-line width and widen the card if any title doesn't fit
+const measureCtx = document.createElement("canvas").getContext("2d");
+function autoSpan() {
+  if (state.fit !== "auto") return;
+  for (const card of document.querySelectorAll(".card")) {
+    card.classList.remove("auto-wide");
+    const box = card.querySelector(".link .t");
+    if (!box) continue;
+    measureCtx.font = getComputedStyle(box).font;
+    const needed = Math.max(...[...card.querySelectorAll(".link .tt")].map((t) => measureCtx.measureText(t.textContent).width));
+    if (needed > box.clientWidth + 1) card.classList.add("auto-wide");
+  }
+}
+addEventListener("resize", autoSpan);
+
+// Search: subsequence match over title and hostname, across all spaces
+const ALL = Object.entries(DATA).flatMap(([space, cats]) =>
+  Object.entries(cats).flatMap(([cat, items]) => items.flatMap((i) => i.folder
+    ? i.links.map((l) => ({ ...l, folder: i.folder, where: `${space} › ${cat} › ${i.folder}` }))
+    : [{ ...i, where: `${space} › ${cat}` }])));
+
+function match(q, text) {
+  const t = text.toLowerCase(); const hits = []; let i = 0, gaps = 0;
+  const start = t.indexOf(q);
+  if (start >= 0) return { score: start, hits: [...q].map((_, k) => start + k) };
+  for (const c of q) { const j = t.indexOf(c, i); if (j < 0) return null; if (hits.length) gaps += j - i; hits.push(j); i = j + 1; }
+  return { score: 100 + gaps, hits };
+}
+
+function highlighted(text, hits) {
+  const frag = document.createDocumentFragment(); const set = new Set(hits);
+  [...text].forEach((c, i) => frag.append(set.has(i) ? el("mark", null, c) : c));
+  return frag;
+}
+
+let found = [];
+function search() {
+  const q = $("q").value.trim().toLowerCase();
+  const box = $("results");
+  if (!q) { found = []; box.replaceChildren(); return; }
+  found = ALL.map((l) => ({ l, m: match(q, l.title) || (l.folder && match(q, l.folder + " " + l.title)) || match(q, host(l.url)) }))
+    .filter((r) => r.m).sort((a, b) => a.m.score - b.m.score).slice(0, 8);
+  state.sel = Math.min(state.sel, Math.max(found.length - 1, 0));
+  if (!found.length) { box.replaceChildren(el("div", "no-results", "No matches")); return; }
+  box.replaceChildren(...found.map(({ l, m }, i) => {
+    const a = el("a", "result" + (i === state.sel ? " sel" : "")); a.href = l.url; a.target = "_blank";
+    const text = el("div");
+    const title = el("div"); title.append(match($("q").value.trim().toLowerCase(), l.title) ? highlighted(l.title, m.hits) : l.title);
+    text.append(title, el("small", null, `${host(l.url)} · ${l.where}`));
+    a.append(icon(l.url), text);
+    return a;
+  }));
+}
+
+$("q").oninput = () => { state.sel = 0; search(); };
+$("q").onkeydown = (e) => {
+  if (e.key === "ArrowDown") { state.sel = Math.min(state.sel + 1, found.length - 1); search(); e.preventDefault(); }
+  if (e.key === "ArrowUp") { state.sel = Math.max(state.sel - 1, 0); search(); e.preventDefault(); }
+  if (e.key === "Enter" && found[state.sel]) window.open(found[state.sel].l.url, "_blank");
+  if (e.key === "Escape") { $("q").value = ""; search(); $("q").blur(); }
+};
+
+const keys = Object.keys(VARIANTS);
+const cycle = (d) => { state.variant = keys[(keys.indexOf(state.variant) + d + keys.length) % keys.length]; render(); };
+$("prev").onclick = () => cycle(-1);
+$("next").onclick = () => cycle(1);
+$("theme").onchange = (e) => { state.theme = e.target.value; render(); };
+$("density").onchange = (e) => { state.density = e.target.value; render(); };
+$("titles").onchange = (e) => { state.titles = e.target.value; render(); };
+
+$("fit").onchange = (e) => { state.fit = e.target.value; render(); };
+$("tabstyle").onchange = (e) => { state.tabs = e.target.value; render(); };
+$("extras").onchange = (e) => { state.extras = e.target.value; render(); };
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches("input, select, textarea")) return;
+  if (e.key === "/") { $("q").focus(); e.preventDefault(); }
+  if (e.key === "ArrowLeft") cycle(-1);
+  if (e.key === "ArrowRight") cycle(1);
+});
+
+render();
+</script>
+</body>
+</html>
