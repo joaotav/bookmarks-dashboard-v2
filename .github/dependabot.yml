@@ -1,0 +1,33 @@
+# Version updates: one grouped pull request per ecosystem each month. Security updates
+# for vulnerable dependencies are separate, switched on in the repository settings, and
+# arrive as soon as a fix exists. Nothing is merged automatically.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    # Only propose versions released at least a week ago. A compromised release is
+    # usually caught and pulled within days.
+    cooldown:
+      default-days: 7
+    groups:
+      npm:
+        patterns: ['*']
+    commit-message:
+      prefix: build
+      include: scope
+
+  # Updates the commit SHAs that .github/workflows pins actions to.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ['*']
+    commit-message:
+      prefix: ci
+      include: scope
