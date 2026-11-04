@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { setKeyboardDragTrigger } from 'svelte-dnd-action';
   import CategoryCard from '@/components/CategoryCard.svelte';
   import Menu from '@/components/Menu.svelte';
   import NewCategory from '@/components/NewCategory.svelte';
@@ -7,7 +8,7 @@
   import SpaceForm from '@/components/SpaceForm.svelte';
   import SpaceTabs from '@/components/SpaceTabs.svelte';
   import Toast from '@/components/Toast.svelte';
-  import { create, getWorkspace, subscribe, update } from '@/lib/bookmarks';
+  import { create, getWorkspace, move, subscribe, update } from '@/lib/bookmarks';
   import { isFolder, type BookmarkNode } from '@/lib/node';
   import { getActiveSpaceId, getCollapsed, setActiveSpaceId, setCollapsed, watchCollapsed } from '@/lib/meta';
   import { cacheSettings, getCachedSettings, getSettings, setSettings, watchSettings, type Settings } from '@/lib/settings';
@@ -25,6 +26,10 @@
   let error = $state<string | null>(null);
   let collapsed = $state<string[]>([]);
   let settings = $state<Settings>(getCachedSettings());
+
+  // Space picks up a grip or a space tab for moving with the arrow keys. Enter is left alone,
+  // so it still selects a space tab.
+  setKeyboardDragTrigger('space');
 
   // The stylesheets pick the theme, density, titles and sizing from data-* attributes on <html>.
   // The first run happens before the page is drawn, so it starts with the cached settings.
@@ -76,6 +81,13 @@
   const addLink = (parentId: string) => (url: string, title: string) =>
     void create(parentId, title || defaultTitle(url), url);
   const updateLink = (id: string, changes: { title?: string; url?: string }) => void update(id, changes);
+
+  // Moves are saved one after another, so quick keyboard moves can't overtake each other.
+  // If one fails, reloading puts back the real order.
+  let moving = Promise.resolve();
+  function moveItem(id: string, parentId: string, before: string | undefined) {
+    moving = moving.then(() => move(id, { parentId, before })).catch(load);
+  }
 
   async function deleteItem(id: string, message: string) {
     toast = { message, deleted: await remove(id) };
@@ -207,6 +219,7 @@
           onadd={addLink(active.id)}
           onupdatelink={updateLink}
           ondeletelink={deleteLink}
+          onmovelink={(id, before) => moveItem(id, active.id, before)}
         />
       {/if}
       {#each active.categories as category (category.id)}
@@ -222,6 +235,7 @@
           onadd={addLink(category.id)}
           onupdatelink={updateLink}
           ondeletelink={deleteLink}
+          onmovelink={(id, before) => moveItem(id, category.id, before)}
         />
       {/each}
       {#if isRealSpace(active)}

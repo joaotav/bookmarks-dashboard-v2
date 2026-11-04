@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { dragHandleZone, type DndEvent } from 'svelte-dnd-action';
+  import { flip } from 'svelte/animate';
   import { slide } from 'svelte/transition';
   import type { Link } from '@/lib/tree';
   import AddLink from './AddLink.svelte';
+  import Grip from './Grip.svelte';
   import InlineInput from './InlineInput.svelte';
   import LinkItem from './LinkItem.svelte';
   import Menu from './Menu.svelte';
@@ -18,13 +21,14 @@
     onadd,
     onupdatelink,
     ondeletelink,
+    onmovelink,
   }: {
     id: string;
     title: string;
     links: Link[];
     collapsed: boolean;
     ontoggle: () => void;
-    /** Without these, the category can't be renamed or deleted, like the "Unsorted" card. */
+    /** Without these, the category can't be renamed, deleted or moved, like the "Unsorted" card. */
     onrename?: (title: string) => void;
     ondelete?: () => void;
     /** Receives the URLs to open, after asking first when there are many. */
@@ -32,7 +36,24 @@
     onadd: (url: string, title: string) => void;
     onupdatelink: (id: string, changes: { title?: string; url?: string }) => void;
     ondeletelink: (link: Link) => void;
+    /** A link dropped into this card, to go before `before`, or at the end without it. */
+    onmovelink: (id: string, before: string | undefined) => void;
   } = $props();
+
+  // Follows the dragged link around, until the move is saved and the links come back from
+  // the browser.
+  let rows = $derived(links);
+  const FLIP_MS = 150;
+
+  function drop({ detail }: CustomEvent<DndEvent<Link>>) {
+    rows = detail.items;
+    const ids = rows.map((link) => link.id);
+    const index = ids.indexOf(detail.info.id);
+    // The card a link was dragged out of gets the event too.
+    if (index === -1) return;
+    if (ids.join() === links.map((link) => link.id).join()) return;
+    onmovelink(detail.info.id, ids[index + 1]);
+  }
 
   let renaming = $state(false);
 
@@ -63,6 +84,9 @@
 
 <section class="card" class:collapsed>
   <div class="header">
+    {#if ondelete && !renaming}
+      <Grip label="Move {title}" />
+    {/if}
     {#if renaming}
       <InlineInput
         value={title}
@@ -107,17 +131,31 @@
   {/if}
   {#if !collapsed}
     <div id="links-{id}" class="body" transition:slide={{ duration: 150 }}>
-      {#if links.length > 0}
-        <ul>
-          {#each links as link (link.id)}
-            <li>
+      <div class="links">
+        <ul
+          aria-label="Links in {title}"
+          use:dragHandleZone={{
+            items: rows,
+            type: 'link',
+            flipDurationMs: FLIP_MS,
+            zoneTabIndex: -1,
+            dropTargetStyle: {},
+            useCursorForDetection: true,
+          }}
+          onconsider={({ detail }) => (rows = detail.items)}
+          onfinalize={drop}
+        >
+          {#each rows as link (link.id)}
+            <li aria-label={link.title} animate:flip={{ duration: FLIP_MS }}>
               <LinkItem {link} onupdate={(changes) => onupdatelink(link.id, changes)} ondelete={() => ondeletelink(link)} />
             </li>
           {/each}
         </ul>
-      {:else}
-        <p class="empty">No links yet</p>
-      {/if}
+        <!-- Outside the list, which may only hold links. The empty list still takes a row, so links can be dropped in. -->
+        {#if rows.length === 0}
+          <p class="empty">No links yet</p>
+        {/if}
+      </div>
       <div class="add"><AddLink {onadd} /></div>
     </div>
   {/if}
@@ -141,12 +179,21 @@
     max-width: none;
   }
   .header {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 4px;
   }
-  .header:not(:hover, :focus-within) > :global(.menu:not(.open)) {
+  .header:not(:hover, :focus-within) > :global(:is(.menu:not(.open), .grip)) {
     opacity: 0;
+  }
+  /* In the card's padding, left of the chevron. */
+  .header > :global(.grip) {
+    position: absolute;
+    top: 50%;
+    left: calc(-1 * var(--card-padding));
+    width: 12px;
+    transform: translateY(-50%);
   }
   h2 {
     flex: 1;
@@ -197,7 +244,11 @@
   .body {
     padding-top: 8px;
   }
+  .links {
+    position: relative;
+  }
   ul {
+    min-height: var(--row-height);
     display: flex;
     flex-direction: column;
     gap: var(--row-gap);
@@ -241,8 +292,13 @@
     filter: brightness(1.1);
   }
   .empty {
+    position: absolute;
+    top: 0;
+    left: 0;
     margin: 0;
-    padding: 4px;
+    padding: 0 4px;
     color: var(--muted);
+    line-height: var(--row-height);
+    pointer-events: none;
   }
 </style>

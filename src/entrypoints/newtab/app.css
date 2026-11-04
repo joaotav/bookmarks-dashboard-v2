@@ -106,3 +106,9 @@ button {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* The copy of a link, card or tab that follows the pointer while dragging. The drag library
+   focuses it, but the focus ring would only get in the way. */
+#dnd-action-dragged-el {
+  outline: none;
+}
