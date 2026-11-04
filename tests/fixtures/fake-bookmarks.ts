@@ -58,6 +58,13 @@ export function installFakeBookmarks(root: BookmarkNode, { childrenReordered = t
       events.onCreated.fire(node.id, withoutChildren(node));
       return withoutChildren(node);
     },
+    async update(id: string, changes: { title?: string; url?: string }) {
+      const node = find(id);
+      if (!node) throw new Error(`Can't find bookmark for id.`);
+      Object.assign(node, changes);
+      events.onChanged.fire(id, changes);
+      return withoutChildren(node);
+    },
   };
   Object.assign(fakeBrowser.bookmarks, api);
   return { root, events, find };

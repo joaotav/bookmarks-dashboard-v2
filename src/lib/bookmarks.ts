@@ -38,6 +38,16 @@ export async function getWorkspace(): Promise<BookmarkNode> {
   return root!;
 }
 
+/** Creates a folder at the end of `parentId`, or a link when `url` is given. Returns its ID. */
+export async function create(parentId: string, title: string, url?: string): Promise<string> {
+  return (await browser.bookmarks.create({ parentId, title, ...(url !== undefined && { url }) })).id;
+}
+
+/** Renames a folder or link, or changes a link's URL. */
+export async function update(id: string, changes: { title?: string; url?: string }): Promise<void> {
+  await browser.bookmarks.update(id, changes);
+}
+
 /**
  * Calls `onChange` after any bookmark change, wherever it came from: this page, the browser's
  * bookmark manager or sync. Bursts of events, like a sync, are debounced into one call.
