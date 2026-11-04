@@ -241,8 +241,8 @@ Each milestone ends in a working extension in both browsers and its own commit.
 |---|---|---|
 | M0. Scaffold | done, 2026-11-03 | `602162d` |
 | M1. Read-only workspace | done, 2026-11-03 | `4d3e9f9` |
-| M2. Collapse and expand | next | |
-| M3. Display settings | not started | |
+| M2. Collapse and expand | done, 2026-11-04 | |
+| M3. Display settings | next | |
 | M4. Create, edit, delete | not started | |
 | M5. Drag and drop | not started | |
 | M6. Save the current page | not started | |

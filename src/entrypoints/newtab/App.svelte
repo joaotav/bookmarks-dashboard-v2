@@ -3,15 +3,21 @@
   import CategoryCard from '@/components/CategoryCard.svelte';
   import SpaceTabs from '@/components/SpaceTabs.svelte';
   import { getWorkspace, subscribe } from '@/lib/bookmarks';
-  import { getActiveSpaceId, setActiveSpaceId } from '@/lib/meta';
+  import { getActiveSpaceId, getCollapsed, setActiveSpaceId, setCollapsed, watchCollapsed } from '@/lib/meta';
   import { toSpaces, UNSORTED, type Space } from '@/lib/tree';
 
   let spaces = $state<Space[] | null>(null);
   let activeId = $state<string | undefined>();
   let error = $state<string | null>(null);
+  let collapsed = $state<string[]>([]);
 
   // The remembered space, or the first one if it no longer exists.
   const active = $derived(spaces?.find((space) => space.id === activeId) ?? spaces?.[0]);
+
+  // The cards shown in the active space. The "Unsorted" card uses the space's own ID.
+  const cardIds = $derived(
+    active ? [...(active.unsorted.length > 0 ? [active.id] : []), ...active.categories.map((category) => category.id)] : [],
+  );
 
   async function load() {
     try {
@@ -27,19 +33,42 @@
     void setActiveSpaceId(id);
   }
 
+  function saveCollapsed(ids: string[]) {
+    collapsed = ids;
+    void setCollapsed(ids);
+  }
+
+  function toggle(id: string) {
+    saveCollapsed(collapsed.includes(id) ? collapsed.filter((other) => other !== id) : [...collapsed, id]);
+  }
+
+  // Both only touch the active space, so other spaces keep their own state.
+  const collapseAll = () => saveCollapsed([...new Set([...collapsed, ...cardIds])]);
+  const expandAll = () => saveCollapsed(collapsed.filter((id) => !cardIds.includes(id)));
+
   onMount(() => {
     const unsubscribe = subscribe(load);
+    const stopWatching = watchCollapsed((ids) => (collapsed = ids));
     void (async () => {
-      activeId = await getActiveSpaceId();
+      [activeId, collapsed] = await Promise.all([getActiveSpaceId(), getCollapsed()]);
       await load();
     })();
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      stopWatching();
+    };
   });
 </script>
 
 <header class="bar">
   {#if spaces && spaces.length > 0}
     <SpaceTabs {spaces} activeId={active?.id} onselect={select} />
+  {/if}
+  {#if cardIds.length > 0}
+    <div class="actions">
+      <button onclick={collapseAll}>Collapse all</button>
+      <button onclick={expandAll}>Expand all</button>
+    </div>
   {/if}
 </header>
 
@@ -59,10 +88,22 @@
     {:else}
       <div class="cards">
         {#if active.unsorted.length > 0}
-          <CategoryCard title={UNSORTED} links={active.unsorted} />
+          <CategoryCard
+            id={active.id}
+            title={UNSORTED}
+            links={active.unsorted}
+            collapsed={collapsed.includes(active.id)}
+            ontoggle={() => toggle(active.id)}
+          />
         {/if}
         {#each active.categories as category (category.id)}
-          <CategoryCard title={category.title} links={category.links} />
+          <CategoryCard
+            id={category.id}
+            title={category.title}
+            links={category.links}
+            collapsed={collapsed.includes(category.id)}
+            ontoggle={() => toggle(category.id)}
+          />
         {/each}
       </div>
     {/if}
@@ -81,6 +122,22 @@
     padding: 0 16px;
     border-bottom: 1px solid var(--border);
     background: var(--bar);
+  }
+  .actions {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+  .actions button {
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .actions button:hover {
+    background: var(--row-hover);
+    color: var(--fg);
   }
   main {
     padding: 20px;
