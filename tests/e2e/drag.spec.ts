@@ -84,3 +84,72 @@ test('moves a link with the keyboard', async ({ dashboard }) => {
   await expectLinks(dashboard, 'Repos', ['GitLab', 'Codeberg', 'GitHub']);
   await expect.poll(() => childTitles(dashboard, ids['Repos']!)).toEqual(['GitLab', 'Codeberg', 'GitHub']);
 });
+
+/** Expects the active space to show these cards, in order. */
+const expectCards = (page: Page, titles: string[]) =>
+  expect(page.getByRole('heading', { level: 2 })).toHaveText(titles.map((title) => new RegExp(`^\\s*${title}`)));
+
+test('moves a category, and Unsorted stays first', async ({ dashboard }) => {
+  const ids = await addBookmarks(dashboard, sample);
+  await addBookmarks(dashboard, [{ title: 'Loose', url: 'https://example.com/' }], ids['Work']);
+  await expectCards(dashboard, ['Unsorted', 'Repos', 'Docs', 'Empty']);
+
+  await drag(dashboard, grip(dashboard, 'Repos'), dashboard.getByRole('heading', { name: /^Empty/ }));
+  await expectCards(dashboard, ['Unsorted', 'Docs', 'Empty', 'Repos']);
+  // The last category goes to the end of the space's folder, after the loose links.
+  await expect.poll(() => childTitles(dashboard, ids['Work']!)).toEqual(['Docs', 'Empty', 'Loose', 'Repos']);
+
+  // Dropped before Unsorted, it becomes the first category.
+  await drag(dashboard, grip(dashboard, 'Empty'), dashboard.getByRole('heading', { name: /^Unsorted/ }));
+  await expectCards(dashboard, ['Unsorted', 'Empty', 'Docs', 'Repos']);
+  await expect.poll(() => childTitles(dashboard, ids['Work']!)).toEqual(['Empty', 'Docs', 'Loose', 'Repos']);
+});
+
+test('moves a category with the keyboard', async ({ dashboard }) => {
+  const ids = await addBookmarks(dashboard, sample);
+  await grip(dashboard, 'Docs').focus();
+  await dashboard.keyboard.press('Space');
+  await dashboard.keyboard.press('ArrowLeft');
+  await dashboard.keyboard.press('Space');
+  await expectCards(dashboard, ['Docs', 'Repos', 'Empty']);
+  await expect.poll(() => childTitles(dashboard, ids['Work']!)).toEqual(['Docs', 'Repos', 'Empty']);
+});
+
+const spaces: Seed[] = [
+  { title: 'Work', children: [] },
+  { title: 'Home', children: [] },
+  { title: 'Study', children: [] },
+  { title: 'Loose', url: 'https://example.com/' },
+];
+
+const workspaceTitles = async (page: Page) =>
+  childTitles(page, await page.evaluate(async () => (await chrome.storage.local.get('workspaceRootId')).workspaceRootId as string));
+
+test('moves a space tab, and Unsorted stays last', async ({ dashboard }) => {
+  await addBookmarks(dashboard, spaces);
+  const tab = (name: string) => dashboard.getByRole('tab', { name });
+  await expect(dashboard.getByRole('tab')).toHaveText([/Work/, /Home/, /Study/, /Unsorted/]);
+
+  await drag(dashboard, tab('Study'), tab('Work'));
+  await expect(dashboard.getByRole('tab')).toHaveText([/Study/, /Work/, /Home/, /Unsorted/]);
+  await expect.poll(() => workspaceTitles(dashboard)).toEqual(['Study', 'Work', 'Home', 'Loose']);
+
+  await drag(dashboard, tab('Study'), tab('Home'));
+  await expect(dashboard.getByRole('tab')).toHaveText([/Work/, /Home/, /Study/, /Unsorted/]);
+  await expect.poll(() => workspaceTitles(dashboard)).toEqual(['Work', 'Home', 'Loose', 'Study']);
+});
+
+test('moves a space tab with the keyboard, while Enter still selects', async ({ dashboard }) => {
+  await addBookmarks(dashboard, spaces);
+  const tab = (name: string) => dashboard.getByRole('tab', { name });
+  await tab('Home').focus();
+  await dashboard.keyboard.press('Enter');
+  await expect(tab('Home')).toHaveAttribute('aria-selected', 'true');
+
+  await dashboard.keyboard.press('Space');
+  await dashboard.keyboard.press('ArrowRight');
+  await dashboard.keyboard.press('Space');
+  await expect(dashboard.getByRole('tab')).toHaveText([/Work/, /Study/, /Home/, /Unsorted/]);
+  await expect.poll(() => workspaceTitles(dashboard)).toEqual(['Work', 'Study', 'Loose', 'Home']);
+  await expect(tab('Home')).toHaveAttribute('aria-selected', 'true');
+});

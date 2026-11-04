@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { setKeyboardDragTrigger } from 'svelte-dnd-action';
+  import { dragHandleZone, setKeyboardDragTrigger, type DndEvent } from 'svelte-dnd-action';
+  import { flip } from 'svelte/animate';
   import CategoryCard from '@/components/CategoryCard.svelte';
   import Menu from '@/components/Menu.svelte';
   import NewCategory from '@/components/NewCategory.svelte';
@@ -12,7 +13,7 @@
   import { isFolder, type BookmarkNode } from '@/lib/node';
   import { getActiveSpaceId, getCollapsed, setActiveSpaceId, setCollapsed, watchCollapsed } from '@/lib/meta';
   import { cacheSettings, getCachedSettings, getSettings, setSettings, watchSettings, type Settings } from '@/lib/settings';
-  import { defaultTitle, joinEmoji, toSpaces, UNSORTED, type Link, type Space } from '@/lib/tree';
+  import { defaultTitle, joinEmoji, toSpaces, UNSORTED, type Category, type Link, type Space } from '@/lib/tree';
   import { openInBackground } from '@/lib/tabs';
   import { remove, restore } from '@/lib/undo';
 
@@ -65,6 +66,30 @@
   // The "Unsorted" tab holds links directly in Workspace. It isn't a folder of its own, so it
   // can't be renamed and has no categories.
   const isRealSpace = (space: Space) => space.id !== rootId;
+
+  // The cards in the active space, in a list that dragging rearranges. Only categories can be
+  // moved, the "Unsorted" card stays first and the new category button last.
+  type Card = { id: string; category?: Category };
+  const NEW_CATEGORY = 'new-category';
+  const FLIP_MS = 150;
+  let cards = $derived<Card[]>(
+    active
+      ? [
+          ...(active.unsorted.length > 0 ? [{ id: active.id }] : []),
+          ...active.categories.map((category) => ({ id: category.id, category })),
+          ...(isRealSpace(active) ? [{ id: NEW_CATEGORY }] : []),
+        ]
+      : [],
+  );
+
+  function dropCard({ detail }: CustomEvent<DndEvent<Card>>) {
+    // A category dropped before "Unsorted" or after the new category button goes back between them.
+    const rank = (card: Card) => (card.category ? 1 : card.id === NEW_CATEGORY ? 2 : 0);
+    cards = detail.items.toSorted((a, b) => rank(a) - rank(b));
+    const ids = cards.filter((card) => card.category).map((card) => card.id);
+    if (!active || ids.join() === active.categories.map((category) => category.id).join()) return;
+    moveItem(detail.info.id, active.id, ids[ids.indexOf(detail.info.id) + 1]);
+  }
 
   async function saveSpace(emoji: string | null, name: string) {
     const title = joinEmoji(emoji, name);
@@ -147,7 +172,13 @@
 
 <header class="bar">
   {#if spaces && spaces.length > 0}
-    <SpaceTabs {spaces} activeId={active?.id} onselect={select} />
+    <SpaceTabs
+      {spaces}
+      activeId={active?.id}
+      unsortedId={rootId}
+      onselect={select}
+      onmove={(id, before) => rootId && moveItem(id, rootId, before)}
+    />
   {/if}
   <div class="space-actions">
     {#if active && isRealSpace(active)}
@@ -207,40 +238,56 @@
       </p>
     </div>
   {:else if active}
-    <div class="cards">
-      {#if active.unsorted.length > 0}
-        <CategoryCard
-          id={active.id}
-          title={UNSORTED}
-          links={active.unsorted}
-          collapsed={collapsed.includes(active.id)}
-          ontoggle={() => toggle(active.id)}
-          onopenall={(urls) => void openInBackground(urls)}
-          onadd={addLink(active.id)}
-          onupdatelink={updateLink}
-          ondeletelink={deleteLink}
-          onmovelink={(id, before) => moveItem(id, active.id, before)}
-        />
-      {/if}
-      {#each active.categories as category (category.id)}
-        <CategoryCard
-          id={category.id}
-          title={category.title}
-          links={category.links}
-          collapsed={collapsed.includes(category.id)}
-          ontoggle={() => toggle(category.id)}
-          onrename={(title) => void update(category.id, { title })}
-          ondelete={() => void deleteItem(category.id, `Deleted “${category.title}”`)}
-          onopenall={(urls) => void openInBackground(urls)}
-          onadd={addLink(category.id)}
-          onupdatelink={updateLink}
-          ondeletelink={deleteLink}
-          onmovelink={(id, before) => moveItem(id, category.id, before)}
-        />
+    <div
+      class="cards"
+      aria-label="Categories"
+      use:dragHandleZone={{
+        items: cards,
+        type: 'category',
+        flipDurationMs: FLIP_MS,
+        zoneTabIndex: -1,
+        dropTargetStyle: {},
+        useCursorForDetection: true,
+      }}
+      onconsider={({ detail }) => (cards = detail.items)}
+      onfinalize={dropCard}
+    >
+      {#each cards as card (card.id)}
+        <div class="slot" aria-label={card.category?.title ?? (card.id === NEW_CATEGORY ? 'New category' : UNSORTED)} animate:flip={{ duration: FLIP_MS }}>
+          {#if card.category}
+            {@const category = card.category}
+            <CategoryCard
+              id={category.id}
+              title={category.title}
+              links={category.links}
+              collapsed={collapsed.includes(category.id)}
+              ontoggle={() => toggle(category.id)}
+              onrename={(title) => void update(category.id, { title })}
+              ondelete={() => void deleteItem(category.id, `Deleted “${category.title}”`)}
+              onopenall={(urls) => void openInBackground(urls)}
+              onadd={addLink(category.id)}
+              onupdatelink={updateLink}
+              ondeletelink={deleteLink}
+              onmovelink={(id, before) => moveItem(id, category.id, before)}
+            />
+          {:else if card.id === NEW_CATEGORY}
+            <NewCategory oncreate={(title) => void create(active.id, title)} />
+          {:else}
+            <CategoryCard
+              id={active.id}
+              title={UNSORTED}
+              links={active.unsorted}
+              collapsed={collapsed.includes(active.id)}
+              ontoggle={() => toggle(active.id)}
+              onopenall={(urls) => void openInBackground(urls)}
+              onadd={addLink(active.id)}
+              onupdatelink={updateLink}
+              ondeletelink={deleteLink}
+              onmovelink={(id, before) => moveItem(id, active.id, before)}
+            />
+          {/if}
+        </div>
       {/each}
-      {#if isRealSpace(active)}
-        <NewCategory oncreate={(title) => void create(active.id, title)} />
-      {/if}
     </div>
   {/if}
 </main>
