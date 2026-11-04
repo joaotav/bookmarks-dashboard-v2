@@ -247,19 +247,7 @@ Three layers, each in its own folder under `tests/`:
 
 ## Milestones
 
-Each milestone ends in a working extension in both browsers and its own commit.
-
-| Milestone | Status | Commit |
-|---|---|---|
-| M0. Scaffold | done, 2026-11-03 | `602162d` |
-| M1. Read-only workspace | done, 2026-11-03 | `4d3e9f9` |
-| M2. Collapse and expand | done, 2026-11-04 | |
-| M3. Display settings | next | |
-| M4. Create, edit, delete | not started | |
-| M5. Drag and drop | not started | |
-| M6. Save the current page | not started | |
-| M7. Search | not started | |
-| M8. Packaging | not started | |
+Each milestone ends in a working extension in both browsers, merged into `main` through its own PR. Progress is tracked in the [MVP tracking issue](https://github.com/joaotav/bookmarks-dashboard-v2/issues/1), which has one sub-issue per milestone. M0 to M2 were done before the tracking issue existed, in `602162d`, `4d3e9f9` and `7c526aa`.
 
 ### M0. Scaffold
 
