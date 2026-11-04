@@ -1,0 +1,29 @@
+{
+  "name": "bookmarks-dashboard",
+  "description": "New tab page with the links you are working on, organized into spaces and categories",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "check": "svelte-check --tsconfig ./tsconfig.json && vitest run --passWithNoTests && npm audit --audit-level=high && wxt build -b firefox && web-ext lint --source-dir .output/firefox-mv3",
+    "postinstall": "wxt prepare"
+  },
+  "devDependencies": {
+    "@tsconfig/svelte": "^5.0.8",
+    "@wxt-dev/module-svelte": "^2.0.5",
+    "svelte": "^5.57.3",
+    "svelte-check": "^4.7.8",
+    "tslib": "^2.9.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0",
+    "web-ext": "^10.8.0",
+    "wxt": "^0.21.5"
+  }
+}

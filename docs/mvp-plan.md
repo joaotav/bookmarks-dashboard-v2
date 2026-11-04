@@ -43,7 +43,7 @@ The rest of this plan assumes the proposed decisions and changes if any of them 
 
 ## Layout
 
-Settled with the throwaway prototype in `prototypes/new-tab-layout.prototype.html`.
+Settled with the throwaway prototype `prototypes/new-tab-layout.prototype.html`, kept on the `prototype/new-tab-layout` branch.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -203,20 +203,22 @@ On Firefox, a saved `favIconUrl` may be an `https:` URL. The `<img>` then loads 
 ## Code layout
 
 ```
-entrypoints/
-  newtab/            index.html, main.ts, App.svelte
-  popup/             index.html, main.ts, App.svelte
-components/          CategoryCard, FolderGroup, LinkItem, SearchBox, Toast, ...
-lib/
-  bookmarks.ts       thin wrapper over browser.bookmarks: ensureRoot, getWorkspace, create, update, move, remove, subscribe
-  tree.ts            BookmarkTreeNode to view model, URL safety       (pure)
-  root.ts            pickOtherBookmarksFolder                         (pure)
-  meta.ts            collapsed state and icon cache in storage.local
-  settings.ts        display settings in storage.sync, with defaults
-  icons.ts           iconFor, per browser
-  search.ts          uFuzzy index and ranking                         (pure)
-  undo.ts            snapshot and restore a deleted subtree
+src/
+  entrypoints/
+    newtab/          index.html, main.ts, App.svelte
+    popup/           index.html, main.ts, App.svelte
+  components/        CategoryCard, LinkItem, SpaceTabs, SearchBox, SettingsPanel, Toast, ...
+  lib/
+    bookmarks.ts     thin wrapper over browser.bookmarks: ensureRoot, getWorkspace, create, update, move, remove, subscribe
+    tree.ts          BookmarkTreeNode to view model, URL safety, space emoji   (pure)
+    root.ts          pickOtherBookmarksFolder                                  (pure)
+    meta.ts          collapsed state and icon cache in storage.local
+    settings.ts      display settings in storage.sync, with defaults
+    icons.ts         iconFor, per browser
+    search.ts        uFuzzy index and ranking                                  (pure)
+    undo.ts          snapshot and restore a deleted subtree
 tests/               Vitest, one file per pure module
+public/icon/         extension icons, placeholders from the WXT template for now
 wxt.config.ts
 ```
 
