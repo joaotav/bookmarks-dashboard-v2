@@ -237,6 +237,18 @@ No background script in the MVP. Everything happens in the new tab page and the 
 
 Each milestone ends in a working extension in both browsers and its own commit.
 
+| Milestone | Status | Commit |
+|---|---|---|
+| M0. Scaffold | done, 2026-11-03 | `602162d` |
+| M1. Read-only workspace | done, 2026-11-03 | `4d3e9f9` |
+| M2. Collapse and expand | next | |
+| M3. Display settings | not started | |
+| M4. Create, edit, delete | not started | |
+| M5. Drag and drop | not started | |
+| M6. Save the current page | not started | |
+| M7. Search | not started | |
+| M8. Packaging | not started | |
+
 ### M0. Scaffold
 
 - WXT project with the Svelte module and TypeScript, `newtab` and `popup` entrypoints showing placeholder text.
