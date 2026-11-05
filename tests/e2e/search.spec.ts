@@ -43,6 +43,8 @@ test('"/" focuses the search, which finds links in other spaces and in collapsed
 test('Enter opens the selected link in this tab', async ({ dashboard }) => {
   await addBookmarks(dashboard, sample);
   await dashboard.getByRole('combobox', { name: 'Search all spaces' }).fill('git');
+  // The bookmarks are added one by one, so wait until the page has all of them.
+  await expect(dashboard.getByRole('option')).toHaveText([/GitHub/, /GitLab/]);
   await dashboard.keyboard.press('ArrowDown');
   await expect(dashboard.getByRole('option', { selected: true })).toHaveText(/GitLab/);
   await dashboard.keyboard.press('Enter');
@@ -53,6 +55,7 @@ test('Ctrl+Enter opens it in a background tab and keeps the search', async ({ co
   await addBookmarks(dashboard, sample);
   const box = dashboard.getByRole('combobox', { name: 'Search all spaces' });
   await box.fill('youtube');
+  await expect(dashboard.getByRole('option')).toHaveText([/YouTube/]);
   await dashboard.keyboard.press('Control+Enter');
   await expect.poll(() => webPages(context)).toEqual(['https://www.youtube.com/']);
   await expect(box).toHaveValue('youtube');
