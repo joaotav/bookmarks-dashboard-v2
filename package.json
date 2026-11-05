@@ -12,6 +12,7 @@
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
+    "sign:firefox": "wxt zip -b firefox && web-ext sign --channel=unlisted --source-dir .output/firefox-mv3 --upload-source-code .output/bookmarks-dashboard-$npm_package_version-sources.zip --artifacts-dir .output/signed",
     "test": "vitest run",
     "test:e2e": "wxt build && playwright test",
     "check": "svelte-check --tsconfig ./tsconfig.json && vitest run && npm audit --audit-level=high && wxt build -b firefox && web-ext lint --source-dir .output/firefox-mv3",
