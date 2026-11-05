@@ -4,6 +4,10 @@ How the extension changes from one version to the next. See [CONTRIBUTING.md](CO
 
 ## Unreleased
 
+## 0.1.0 - 2026-11-08
+
+The first release.
+
 ### Features
 
 - The new tab page shows the bookmarks in **Other Bookmarks › Workspace**. Each folder in Workspace is a space, shown as a tab in the top bar, and each folder in a space is a card of links. The Workspace folder is created on first use.
