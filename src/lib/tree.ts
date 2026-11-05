@@ -6,6 +6,8 @@ export interface Link {
   url: string;
   /** Only http and https links are clickable. Others, like javascript: bookmarklets, are shown as text. */
   openable: boolean;
+  /** The favicon saved with the link from the popup, in Firefox. */
+  icon?: string;
 }
 
 export interface Category {
@@ -55,18 +57,22 @@ export function toWebUrl(input: string): string | null {
 /** The title for a link saved without one: its hostname without "www.". */
 export const defaultTitle = (url: string) => new URL(url).hostname.replace(/^www\./, '');
 
-function toLink(node: { id: string; title: string; url: string }): Link {
-  return { id: node.id, title: node.title || node.url, url: node.url, openable: isOpenable(node.url) };
+type Icons = Map<string, string>;
+
+function toLink(node: { id: string; title: string; url: string }, icons: Icons): Link {
+  const link: Link = { id: node.id, title: node.title || node.url, url: node.url, openable: isOpenable(node.url) };
+  const icon = icons.get(node.id);
+  return icon ? { ...link, icon } : link;
 }
 
-function directLinks(folder: BookmarkNode): Link[] {
-  return (folder.children ?? []).filter(isLink).map(toLink);
+function directLinks(folder: BookmarkNode, icons: Icons): Link[] {
+  return (folder.children ?? []).filter(isLink).map((node) => toLink(node, icons));
 }
 
 /** Links anywhere inside a folder, in order. Subfolders of a category are shown flattened. */
-function allLinks(folder: BookmarkNode): Link[] {
+function allLinks(folder: BookmarkNode, icons: Icons): Link[] {
   return (folder.children ?? []).flatMap((child) =>
-    isFolder(child) ? allLinks(child) : isLink(child) ? [toLink(child)] : [],
+    isFolder(child) ? allLinks(child, icons) : isLink(child) ? [toLink(child, icons)] : [],
   );
 }
 
@@ -89,19 +95,41 @@ export const joinEmoji = (emoji: string | null, name: string) => (emoji ? `${emo
 /**
  * Converts the Workspace folder's subtree into spaces. Each folder in Workspace is a space,
  * each folder in a space is a category. Links directly in Workspace go to an extra
- * "Unsorted" space at the end, which uses the Workspace folder's own ID.
+ * "Unsorted" space at the end, which uses the Workspace folder's own ID. `icons` holds the
+ * favicons saved from the popup, by bookmark ID.
  */
-export function toSpaces(workspace: BookmarkNode): Space[] {
+export function toSpaces(workspace: BookmarkNode, icons: Icons = new Map()): Space[] {
   const spaces: Space[] = (workspace.children ?? []).filter(isFolder).map((folder) => ({
     id: folder.id,
     ...splitEmoji(folder.title),
-    unsorted: directLinks(folder),
+    unsorted: directLinks(folder, icons),
     categories: (folder.children ?? [])
       .filter(isFolder)
-      .map((category) => ({ id: category.id, title: category.title, links: allLinks(category) })),
+      .map((category) => ({ id: category.id, title: category.title, links: allLinks(category, icons) })),
   }));
 
-  const loose = directLinks(workspace);
+  const loose = directLinks(workspace, icons);
   if (loose.length > 0) spaces.push({ id: workspace.id, name: UNSORTED, emoji: null, unsorted: loose, categories: [] });
   return spaces;
+}
+
+/** Where a link lives, like "Work › Repos". */
+export const placeName = (space: Space, category?: Category) =>
+  category ? `${space.name} › ${category.title}` : space.name === UNSORTED ? UNSORTED : `${space.name} › ${UNSORTED}`;
+
+const sameUrl = (a: string, b: string) => {
+  try {
+    return new URL(a).href === new URL(b).href;
+  } catch {
+    return a === b;
+  }
+};
+
+/** Every place in the workspace that already holds a link to `url`. */
+export function placesOf(spaces: Space[], url: string): string[] {
+  const has = (links: Link[]) => links.some((link) => sameUrl(link.url, url));
+  return spaces.flatMap((space) => [
+    ...(has(space.unsorted) ? [placeName(space)] : []),
+    ...space.categories.filter((category) => has(category.links)).map((category) => placeName(space, category)),
+  ]);
 }
