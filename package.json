@@ -18,6 +18,7 @@
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
+    "@leeoniya/ufuzzy": "^1.0.19",
     "@playwright/test": "^1.64.1",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@testing-library/jest-dom": "^7.0.1",

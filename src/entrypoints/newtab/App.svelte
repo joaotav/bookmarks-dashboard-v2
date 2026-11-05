@@ -5,6 +5,7 @@
   import CategoryCard from '@/components/CategoryCard.svelte';
   import Menu from '@/components/Menu.svelte';
   import NewCategory from '@/components/NewCategory.svelte';
+  import SearchBox from '@/components/SearchBox.svelte';
   import SettingsPanel from '@/components/SettingsPanel.svelte';
   import SpaceForm from '@/components/SpaceForm.svelte';
   import SpaceTabs from '@/components/SpaceTabs.svelte';
@@ -222,6 +223,9 @@
         <button onclick={collapseAll}>Collapse all</button>
         <button onclick={expandAll}>Expand all</button>
       </div>
+    {/if}
+    {#if spaces && spaces.length > 0}
+      <SearchBox {spaces} onopen={(url, background) => (background ? void openInBackground([url]) : location.assign(url))} />
     {/if}
     <SettingsPanel {settings} onchange={saveSettings} />
   </div>

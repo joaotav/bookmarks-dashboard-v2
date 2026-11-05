@@ -11,3 +11,6 @@ Element.prototype.animate ??= function () {
 
 // SpaceTabs remeasures once web fonts have loaded. There are none to wait for.
 if (!document.fonts) Object.defineProperty(document, 'fonts', { value: { ready: Promise.resolve() } });
+
+// The search results scroll the selected one into view. Nothing scrolls here.
+Element.prototype.scrollIntoView ??= function () {};
