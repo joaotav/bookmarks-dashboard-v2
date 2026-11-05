@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { iconFor, letterTile } from '@/lib/icons';
   import { defaultTitle, toWebUrl, type Link } from '@/lib/tree';
   import Grip from './Grip.svelte';
   import InlineInput from './InlineInput.svelte';
+  import LinkIcon from './LinkIcon.svelte';
   import Menu from './Menu.svelte';
 
   let {
@@ -16,9 +16,6 @@
     ondelete?: () => void;
   } = $props();
 
-  const icon = $derived(iconFor(link));
-  const tile = $derived(letterTile(link));
-  let iconFailed = $state(false);
   let editing = $state<'title' | 'url' | null>(null);
 
   function saveUrl(text: string) {
@@ -30,11 +27,7 @@
 </script>
 
 {#snippet content()}
-  {#if icon && !iconFailed}
-    <img class="icon" src={icon} alt="" onerror={() => (iconFailed = true)} />
-  {:else}
-    <span class="icon tile" style:--hue={tile.hue}>{tile.letter}</span>
-  {/if}
+  <LinkIcon {link} />
   <span class="text">
     <span class="title">{link.title}</span>
     <!-- Shown only with the "Title and URL" setting. The tooltip already gives the URL to screen readers. -->
@@ -153,7 +146,7 @@
     min-height: var(--row-height);
     padding-block: 6px;
   }
-  :global(:root:is([data-titles='two-lines'], [data-titles='with-url'])) .icon {
+  :global(:root:is([data-titles='two-lines'], [data-titles='with-url'])) .link > :global(.icon) {
     margin-top: 1px;
   }
   /* Level with the icon, which sits at the top of rows taller than one line. */
@@ -171,17 +164,5 @@
   }
   :global(:root[data-titles='with-url']) .url {
     display: block;
-  }
-  .icon {
-    flex: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-  }
-  .tile {
-    background: hsl(var(--hue) 45% 45%);
-    color: #fff;
-    font: 700 10px/16px system-ui, sans-serif;
-    text-align: center;
   }
 </style>
