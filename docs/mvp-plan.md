@@ -126,6 +126,7 @@ Other Bookmarks/                 Firefox: unfiled_____   Chrome: folderType "oth
 | `collapsed` | `string[]` of folder IDs that are collapsed | collapse toggle |
 | `activeSpaceId` | folder ID of the last selected space | tab click |
 | `icon:<bookmarkId>` | favicon URL captured when saving (Firefox only) | popup |
+| `lastCategoryId` | folder ID of the category the popup saved to last | popup |
 
 Metadata whose bookmark no longer exists is ignored when read and pruned on startup.
 
@@ -209,16 +210,17 @@ src/
   entrypoints/
     newtab/          index.html, main.ts, App.svelte
     popup/           index.html, main.ts, App.svelte
-  components/        CategoryCard, LinkItem, SpaceTabs, SearchBox, SettingsPanel, Toast, ...
+  components/        CategoryCard, LinkItem, SaveForm, SpaceTabs, SearchBox, SettingsPanel, Toast, ...
   lib/
     bookmarks.ts     thin wrapper over browser.bookmarks: ensureRoot, getWorkspace, create, update, move, subscribe
     node.ts          bookmark node shape shared by both browsers, isFolder, isLink                (pure)
     tree.ts          BookmarkTreeNode to view model, URL safety, space emoji   (pure)
     root.ts          pickOtherBookmarksFolder                                  (pure)
-    meta.ts          collapsed state and icon cache in storage.local
+    meta.ts          collapsed state, last used category and saved icons in storage.local
     settings.ts      display settings in storage.sync, with defaults
     icons.ts         iconFor, per browser
     search.ts        uFuzzy index and ranking                                  (pure)
+    save.ts          read the active tab and save it, for the popup
     tabs.ts          open links in background tabs
     undo.ts          remove a subtree with a snapshot, and restore it
 tests/

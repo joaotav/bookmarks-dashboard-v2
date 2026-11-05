@@ -11,6 +11,43 @@ export async function setActiveSpaceId(id: string): Promise<void> {
   await browser.storage.local.set({ [ACTIVE_SPACE_KEY]: id });
 }
 
+const LAST_CATEGORY_KEY = 'lastCategoryId';
+
+/** The category the popup saved to last, preselected the next time. */
+export async function getLastCategoryId(): Promise<string | undefined> {
+  const value = (await browser.storage.local.get(LAST_CATEGORY_KEY))[LAST_CATEGORY_KEY];
+  return typeof value === 'string' ? value : undefined;
+}
+
+export async function setLastCategoryId(id: string): Promise<void> {
+  await browser.storage.local.set({ [LAST_CATEGORY_KEY]: id });
+}
+
+const ICON_PREFIX = 'icon:';
+
+/** Favicons the popup saved in Firefox, by bookmark ID. */
+export async function getIcons(): Promise<Map<string, string>> {
+  const stored = await browser.storage.local.get(null);
+  return new Map(
+    Object.entries(stored)
+      .filter(([key, value]) => key.startsWith(ICON_PREFIX) && typeof value === 'string')
+      .map(([key, value]) => [key.slice(ICON_PREFIX.length), value as string]),
+  );
+}
+
+export async function setIcon(id: string, url: string): Promise<void> {
+  await browser.storage.local.set({ [ICON_PREFIX + id]: url });
+}
+
+/** Calls `onChange` whenever a saved favicon is added, changed or removed. Returns a function that stops listening. */
+export function watchIcons(onChange: () => void): () => void {
+  const listener = (changes: Record<string, unknown>, area: string) => {
+    if (area === 'local' && Object.keys(changes).some((key) => key.startsWith(ICON_PREFIX))) onChange();
+  };
+  browser.storage.onChanged.addListener(listener);
+  return () => browser.storage.onChanged.removeListener(listener);
+}
+
 const COLLAPSED_KEY = 'collapsed';
 
 const toIds = (value: unknown): string[] =>

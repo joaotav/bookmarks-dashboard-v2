@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultTitle, joinEmoji, splitEmoji, toSpaces, toWebUrl, UNSORTED } from '@/lib/tree';
+import { defaultTitle, joinEmoji, placesOf, splitEmoji, toSpaces, toWebUrl, UNSORTED } from '@/lib/tree';
 import { folder, link, separator } from '../fixtures/trees';
 
 describe('splitEmoji', () => {
@@ -158,5 +158,30 @@ describe('defaultTitle', () => {
   it('is the hostname without www.', () => {
     expect(defaultTitle('https://www.youtube.com/watch?v=1')).toBe('youtube.com');
     expect(defaultTitle('https://docs.github.com/en')).toBe('docs.github.com');
+  });
+});
+
+describe('saved icons and places', () => {
+  const workspace = folder('w', 'Workspace', [
+    folder('s1', '💼 Work', [
+      link('loose', 'Loose', 'https://example.com/'),
+      folder('c1', 'Repos', [link('l1', 'GitHub', 'https://github.com/')]),
+      folder('c2', 'Docs', [folder('old', 'Old', [link('l2', 'GitHub again', 'https://github.com/')])]),
+    ]),
+    link('top', 'Top', 'https://example.org/'),
+  ]);
+
+  it('attaches saved icons to their links', () => {
+    const spaces = toSpaces(workspace, new Map([['l1', 'https://github.com/favicon.ico']]));
+    expect(spaces[0]!.categories[0]!.links[0]!.icon).toBe('https://github.com/favicon.ico');
+    expect(spaces[0]!.unsorted[0]).not.toHaveProperty('icon');
+  });
+
+  it('names every place a URL is saved, including nested folders and Unsorted', () => {
+    const spaces = toSpaces(workspace);
+    expect(placesOf(spaces, 'https://github.com/')).toEqual(['Work › Repos', 'Work › Docs']);
+    expect(placesOf(spaces, 'https://example.com')).toEqual([`Work › ${UNSORTED}`]);
+    expect(placesOf(spaces, 'https://example.org/')).toEqual([UNSORTED]);
+    expect(placesOf(spaces, 'https://gitlab.com/')).toEqual([]);
   });
 });

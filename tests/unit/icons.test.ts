@@ -23,6 +23,11 @@ describe('iconFor', () => {
     vi.stubEnv('BROWSER', 'firefox');
     expect(iconFor(link('https://github.com'))).toBeNull();
   });
+
+  it('returns the icon saved from the popup on Firefox', () => {
+    vi.stubEnv('BROWSER', 'firefox');
+    expect(iconFor({ ...link('https://github.com'), icon: 'https://github.com/favicon.ico' })).toBe('https://github.com/favicon.ico');
+  });
 });
 
 describe('letterTile', () => {

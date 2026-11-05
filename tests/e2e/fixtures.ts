@@ -27,6 +27,12 @@ export const test = base.extend<{
   newTab: () => Promise<Page>;
   /** The new tab page, on first run with an empty Workspace. */
   dashboard: Page;
+  /**
+   * Opens the toolbar popup in a tab, as if `tab` were the page it was opened on. The browser
+   * only shows the popup that page's URL when the popup is opened from the toolbar, which
+   * tests can't click, so this stands in for that one call.
+   */
+  popup: (tab: { url: string; title: string; favIconUrl?: string }) => Promise<Page>;
 }>({
   // Every test gets a fresh browser profile with the extension installed.
   context: async ({}, use) => {
@@ -41,6 +47,16 @@ export const test = base.extend<{
     await use(async () => {
       const page = await context.newPage();
       await page.goto(`chrome-extension://${extensionId}/newtab.html`);
+      return page;
+    });
+  },
+  popup: async ({ context }, use) => {
+    await use(async (tab) => {
+      const page = await context.newPage();
+      await page.addInitScript((tab) => {
+        chrome.tabs.query = (async () => [tab]) as never;
+      }, tab);
+      await page.goto(`chrome-extension://${extensionId}/popup.html`);
       return page;
     });
   },

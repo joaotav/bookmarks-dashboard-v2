@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
-import { getCollapsed, setCollapsed, watchCollapsed } from '@/lib/meta';
+import { getCollapsed, getIcons, getLastCategoryId, setCollapsed, setIcon, setLastCategoryId, watchCollapsed, watchIcons } from '@/lib/meta';
 
 describe('collapsed state', () => {
   beforeEach(() => fakeBrowser.reset());
@@ -36,5 +36,43 @@ describe('collapsed state', () => {
     watchCollapsed(onChange);
     await fakeBrowser.storage.sync.set({ collapsed: ['12'] });
     expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+describe('last category', () => {
+  beforeEach(() => fakeBrowser.reset());
+
+  it('is undefined until the popup saves somewhere', async () => {
+    expect(await getLastCategoryId()).toBeUndefined();
+    await setLastCategoryId('c1');
+    expect(await getLastCategoryId()).toBe('c1');
+  });
+});
+
+describe('saved icons', () => {
+  beforeEach(() => fakeBrowser.reset());
+
+  it('reads back the icons by bookmark ID, and nothing else', async () => {
+    await setIcon('12', 'https://github.com/favicon.ico');
+    await setIcon('40', 'data:image/png;base64,AAAA');
+    await fakeBrowser.storage.local.set({ collapsed: ['12'], 'icon:7': 42 });
+    expect(await getIcons()).toEqual(
+      new Map([
+        ['12', 'https://github.com/favicon.ico'],
+        ['40', 'data:image/png;base64,AAAA'],
+      ]),
+    );
+  });
+
+  it('notifies watchers of icon changes only', async () => {
+    const onChange = vi.fn();
+    const stop = watchIcons(onChange);
+    await setCollapsed(['12']);
+    expect(onChange).not.toHaveBeenCalled();
+    await setIcon('12', 'https://github.com/favicon.ico');
+    expect(onChange).toHaveBeenCalledOnce();
+    stop();
+    await setIcon('13', 'https://gitlab.com/favicon.ico');
+    expect(onChange).toHaveBeenCalledOnce();
   });
 });

@@ -11,7 +11,7 @@
   import Toast from '@/components/Toast.svelte';
   import { create, getWorkspace, move, subscribe, update } from '@/lib/bookmarks';
   import { isFolder, type BookmarkNode } from '@/lib/node';
-  import { getActiveSpaceId, getCollapsed, setActiveSpaceId, setCollapsed, watchCollapsed } from '@/lib/meta';
+  import { getActiveSpaceId, getCollapsed, getIcons, setActiveSpaceId, setCollapsed, watchCollapsed, watchIcons } from '@/lib/meta';
   import { cacheSettings, getCachedSettings, getSettings, setSettings, watchSettings, type Settings } from '@/lib/settings';
   import { defaultTitle, joinEmoji, toSpaces, UNSORTED, type Category, type Link, type Space } from '@/lib/tree';
   import { openInBackground } from '@/lib/tabs';
@@ -49,9 +49,9 @@
 
   async function load() {
     try {
-      const workspace = await getWorkspace();
+      const [workspace, icons] = await Promise.all([getWorkspace(), getIcons()]);
       rootId = workspace.id;
-      spaces = toSpaces(workspace);
+      spaces = toSpaces(workspace, icons);
       error = null;
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
@@ -158,6 +158,8 @@
     const unsubscribe = subscribe(load);
     const stopWatchingCollapsed = watchCollapsed((ids) => (collapsed = ids));
     const stopWatchingSettings = watchSettings((next) => (settings = next));
+    // The popup saves a page's icon just after the bookmark, so it can arrive after the reload.
+    const stopWatchingIcons = watchIcons(load);
     void (async () => {
       [activeId, collapsed, settings] = await Promise.all([getActiveSpaceId(), getCollapsed(), getSettings()]);
       await load();
@@ -166,6 +168,7 @@
       unsubscribe();
       stopWatchingCollapsed();
       stopWatchingSettings();
+      stopWatchingIcons();
     };
   });
 </script>
