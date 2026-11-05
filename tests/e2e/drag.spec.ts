@@ -76,6 +76,8 @@ test('drops a link into an empty category', async ({ dashboard }) => {
 
 test('moves a link with the keyboard', async ({ dashboard }) => {
   const ids = await addBookmarks(dashboard, sample);
+  // The bookmarks are added one by one, so wait until the page has all of them.
+  await expectLinks(dashboard, 'Repos', ['GitHub', 'GitLab', 'Codeberg']);
   await grip(dashboard, 'GitHub').focus();
   await dashboard.keyboard.press('Space');
   await dashboard.keyboard.press('ArrowDown');
@@ -107,6 +109,7 @@ test('moves a category, and Unsorted stays first', async ({ dashboard }) => {
 
 test('moves a category with the keyboard', async ({ dashboard }) => {
   const ids = await addBookmarks(dashboard, sample);
+  await expectCards(dashboard, ['Repos', 'Docs', 'Empty']);
   await grip(dashboard, 'Docs').focus();
   await dashboard.keyboard.press('Space');
   await dashboard.keyboard.press('ArrowLeft');
@@ -142,6 +145,7 @@ test('moves a space tab, and Unsorted stays last', async ({ dashboard }) => {
 test('moves a space tab with the keyboard, while Enter still selects', async ({ dashboard }) => {
   await addBookmarks(dashboard, spaces);
   const tab = (name: string) => dashboard.getByRole('tab', { name });
+  await expect(dashboard.getByRole('tab')).toHaveText([/Work/, /Home/, /Study/, /Unsorted/]);
   await tab('Home').focus();
   await dashboard.keyboard.press('Enter');
   await expect(tab('Home')).toHaveAttribute('aria-selected', 'true');
