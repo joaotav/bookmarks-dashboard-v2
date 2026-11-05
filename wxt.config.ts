@@ -7,6 +7,12 @@ import { defineConfig } from 'wxt';
 const firefoxProfile = resolve('.dev-profiles/firefox');
 mkdirSync(firefoxProfile, { recursive: true });
 
+// The public half of a key pair that fixes the extension's ID in Chrome, which otherwise
+// derives it from the folder an unpacked extension is loaded from. storage.sync needs the
+// same ID on every computer (ADR 0006). It isn't secret; the private half is kept elsewhere.
+const chromeKey =
+  'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0afWPVBCn9B4yiCmM6bMuDtH4H+lxyCAiYS9lCUdqrc1oVAvjNBltW9Ia190NMNg7o4xMjq3WavqjvGylAeXeBwrJDQZg7BTZxo0pp3UoHBmj61GBBbRe+0upvGAn9kowI+Zj5gOFC8sTqfSuRz9MIX5c7SN5CzhgZzT0CYJRLP1MpUr/QfeUvW+gEn/bOkmokiigY76xfxx8sVEjBZJVEQq2PvldvtdOETqgfwBv7EEIerawpqvFWsXq1fljPhat8KVVqrjach6IKCffc11u8gyF0K4Q3gE6dAvpsPjNJL0tm6S4JXXpts8vcLfbLOLRCzDAqawZQHflD5M3L8JhQIDAQAB';
+
 // See https://wxt.dev/api/reference/wxt/interfaces/inlineconfig.html
 export default defineConfig({
   srcDir: 'src',
@@ -27,6 +33,7 @@ export default defineConfig({
     name: 'Bookmarks Dashboard',
     description: 'New tab page with the links you are working on, organized into spaces and categories.',
     permissions: ['bookmarks', 'storage', 'activeTab', ...(browser === 'chrome' ? ['favicon'] : [])],
+    ...(browser === 'chrome' && { key: chromeKey }),
     ...(browser === 'firefox' && {
       browser_specific_settings: {
         gecko: {

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { test as base, chromium, expect, type BrowserContext, type Page } from '@playwright/test';
 
@@ -9,9 +10,10 @@ declare global {
 
 const extensionPath = resolve('.output/chrome-mv3');
 
-// Chrome names an unpacked extension after a hash of its folder path. The extension has no
-// background script to ask, so the ID is worked out the same way here.
-const extensionId = [...createHash('sha256').update(extensionPath).digest('hex').slice(0, 32)]
+// Chrome names the extension after a hash of the public key in its manifest. The extension
+// has no background script to ask, so the ID is worked out the same way here.
+const { key } = JSON.parse(readFileSync(resolve(extensionPath, 'manifest.json'), 'utf8')) as { key: string };
+const extensionId = [...createHash('sha256').update(Buffer.from(key, 'base64')).digest('hex').slice(0, 32)]
   .map((digit) => String.fromCharCode(97 + parseInt(digit, 16)))
   .join('');
 
