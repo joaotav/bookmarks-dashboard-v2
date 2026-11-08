@@ -30,7 +30,7 @@ export default defineConfig({
   // WXT targets MV2 for Firefox by default. Both browsers use MV3 (ADR 0002).
   manifestVersion: 3,
   manifest: ({ browser }) => ({
-    name: 'Bookmarks Dashboard',
+    name: 'Chickadee',
     description: 'New tab page with the links you are working on, organized into spaces and categories.',
     permissions: ['bookmarks', 'storage', 'activeTab', ...(browser === 'chrome' ? ['favicon'] : [])],
     ...(browser === 'chrome' && { key: chromeKey }),

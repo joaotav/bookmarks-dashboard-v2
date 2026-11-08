@@ -16,7 +16,7 @@ The new tab page exports the `Workspace` subtree and its collapse state as JSON,
 
 ```json
 {
-  "format": "bookmarks-dashboard",
+  "format": "chickadee",
   "version": 1,
   "exportedAt": "2026-10-24T15:00:00.000Z",
   "root": {
