@@ -255,7 +255,7 @@ Three layers, each in its own folder under `tests/`:
 
 ## Milestones
 
-Each milestone ends in a working extension in both browsers, merged into `main` through its own PR. Progress is tracked in the [MVP tracking issue](https://github.com/joaotav/bookmarks-dashboard-v2/issues/1), which has one sub-issue per milestone. M0 to M2 were done before the tracking issue existed, in `602162d`, `4d3e9f9` and `7c526aa`.
+Each milestone ends in a working extension in both browsers, merged into `main` through its own PR. Progress is tracked in the [MVP tracking issue](https://github.com/joaotav/chickadee/issues/1), which has one sub-issue per milestone. M0 to M2 were done before the tracking issue existed, in `602162d`, `4d3e9f9` and `7c526aa`.
 
 ### M0. Scaffold
 

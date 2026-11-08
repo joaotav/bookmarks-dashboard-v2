@@ -1,4 +1,4 @@
-# Bookmarks Dashboard
+# Chickadee
 
 A new tab page for Firefox and Chrome that keeps the links you're currently working on in reach, organized into spaces and categories.
 
@@ -8,7 +8,7 @@ The links are ordinary browser bookmarks in a `Workspace` folder, so they sync w
 
 ## Install
 
-Download the files from the [latest release](https://github.com/joaotav/bookmarks-dashboard-v2/releases/latest).
+Download the files from the [latest release](https://github.com/joaotav/chickadee/releases/latest).
 
 ### Firefox
 

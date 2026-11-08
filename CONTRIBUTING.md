@@ -12,7 +12,7 @@ Every change except small fixes starts as an issue. Changes are made on a branch
 
 Open an issue before starting work, using one of the templates: bug report, feature request or tracking issue. Search the existing issues first.
 
-Larger efforts get a tracking issue, with the smaller issues attached as sub-issues in the order they should be done. The [MVP tracking issue](https://github.com/joaotav/bookmarks-dashboard-v2/issues/1) lists the milestones in [docs/mvp-plan.md](docs/mvp-plan.md).
+Larger efforts get a tracking issue, with the smaller issues attached as sub-issues in the order they should be done. The [MVP tracking issue](https://github.com/joaotav/chickadee/issues/1) lists the milestones in [docs/mvp-plan.md](docs/mvp-plan.md).
 
 Small fixes, like a typo, a broken link or a CI tweak, can skip the issue and go straight to a pull request whose description says why.
 
@@ -54,7 +54,7 @@ CI runs `npm run check` and `npm run test:e2e` on every pull request. Firefox ca
 New entries go under **Unreleased**, in one of these sections: Breaking changes, Features, Improvements, Bug fixes. If a change takes several pull requests, give it one entry describing the net effect. Link the issue:
 
 ```md
-- Choose a theme, density and title style in the new settings panel ([#7](https://github.com/joaotav/bookmarks-dashboard-v2/issues/7))
+- Choose a theme, density and title style in the new settings panel ([#7](https://github.com/joaotav/chickadee/issues/7))
 ```
 
 At a release, the Unreleased entries move under the new version number.
