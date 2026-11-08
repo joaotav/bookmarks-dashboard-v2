@@ -223,12 +223,15 @@ src/
     save.ts          read the active tab and save it, for the popup
     tabs.ts          open links in background tabs
     undo.ts          remove a subtree with a snapshot, and restore it
+  assets/icon.svg    the extension icon, drawn by hand
 tests/
   unit/              Vitest, one file per module in src/lib
   component/         Vitest + Testing Library, one file per component
   e2e/               Playwright, one file per feature
   fixtures/          sample bookmark trees and an in-memory browser.bookmarks
-public/icon/         extension icons, placeholders from the WXT template for now
+scripts/
+  render-icons.mjs   renders the icon to the PNG sizes in public/icon/
+public/icon/         extension icons
 wxt.config.ts
 ```
 

@@ -58,3 +58,26 @@ New entries go under **Unreleased**, in one of these sections: Breaking changes,
 ```
 
 At a release, the Unreleased entries move under the new version number.
+
+## Releasing
+
+Releases are tagged on `main` and published as GitHub releases with both browsers' builds attached.
+
+1. In a pull request, set the version in `package.json` and move the CHANGELOG's Unreleased entries under it. Merge it.
+2. On an up-to-date `main`, sign the Firefox build. It needs an API key and secret from [addons.mozilla.org](https://addons.mozilla.org/developers/addon/api/key/), which stay out of the repo:
+
+   ```sh
+   export WEB_EXT_API_KEY=... WEB_EXT_API_SECRET=...
+   npm run sign:firefox     # the signed .xpi lands in .output/signed/
+   ```
+
+   Mozilla signs an unlisted add-on automatically, usually within minutes. The upload includes the source zip, since the build is minified. AMO refuses a version it has already signed, so every upload needs a new version.
+3. Build the Chrome zip with `npm run zip`. The manifest's `key` keeps the extension ID the same on every computer.
+4. Tag the release and attach both files:
+
+   ```sh
+   git tag -s v0.1.0 -m v0.1.0 && git push origin v0.1.0
+   gh release create v0.1.0 .output/signed/*.xpi .output/*-chrome.zip --title v0.1.0 --notes "..."
+   ```
+
+The extension icon is drawn in `src/assets/icon.svg`. After changing it, run `node scripts/render-icons.mjs` to update the PNG sizes in `public/icon/`.

@@ -4,7 +4,27 @@ A new tab page for Firefox and Chrome that keeps the links you're currently work
 
 The links are ordinary browser bookmarks in a `Workspace` folder, so they sync with the browser's own bookmark sync and stay usable without the extension.
 
-**Status:** in development, not yet published. The [MVP tracking issue](https://github.com/joaotav/bookmarks-dashboard-v2/issues/1) shows progress, and [CHANGELOG.md](CHANGELOG.md) lists what works so far.
+[CHANGELOG.md](CHANGELOG.md) lists what each version can do.
+
+## Install
+
+Download the files from the [latest release](https://github.com/joaotav/bookmarks-dashboard-v2/releases/latest).
+
+### Firefox
+
+1. Download the `.xpi` file and open it in Firefox, for example by dragging it onto a Firefox window.
+2. Click **Add**. Firefox installs it like any add-on, and it stays after restarts. It's signed by Mozilla but not listed on addons.mozilla.org, so updates are installed the same way.
+3. Open a new tab. If Firefox asks whether to keep the new tab page the extension set, choose **Keep changes**.
+
+### Chrome
+
+1. Download the `-chrome.zip` file and unzip it into a folder you'll keep, since Chrome loads the extension from there.
+2. Open `chrome://extensions`, turn on **Developer mode** at the top right, click **Load unpacked** and pick the folder.
+3. Open a new tab. If Chrome asks whether to keep the new tab page, keep it.
+
+The extension stays loaded after restarts. To update, replace the folder's contents with a newer release and click the reload button on the extension's card.
+
+Display settings sync through the browser's own sync: in Firefox when **Add-ons** is checked in the sync settings, and in Chrome when sync is on. The bookmarks themselves sync like any other bookmarks.
 
 ## How bookmarks map to the page
 
