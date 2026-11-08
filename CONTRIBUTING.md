@@ -16,6 +16,19 @@ Larger efforts get a tracking issue, with the smaller issues attached as sub-iss
 
 Small fixes, like a typo, a broken link or a CI tweak, can skip the issue and go straight to a pull request whose description says why.
 
+### Labels
+
+Each issue gets one type and usually one area. The other labels are added when they apply.
+
+| Group | Labels | Use |
+|---|---|---|
+| Type | `bug`, `enhancement`, `documentation`, `chore`, `tracking` | What kind of work it is. The issue templates add `bug`, `enhancement` or `tracking`. `chore` is tooling, CI and maintenance. |
+| Area | `area: new tab`, `area: popup`, `area: search`, `area: design`, `area: release` | The part of the extension it touches. `design` is how things look, `release` is packaging, signing and store listings. |
+| Concern | `usability`, `accessibility` | Something is hard to find, understand or use, or a barrier for people with disabilities. Can apply to any area. |
+| Status | `needs decision` | The issue has open choices, listed under "To decide", to agree on before work starts. Remove it once they're settled. |
+
+Dependabot adds `dependencies` and `javascript` to its own pull requests. GitHub's default labels, like `duplicate` and `wontfix`, keep their usual meaning.
+
 ## Branches and commits
 
 Branch off `main`. Branch names start with your GitHub username, then the number of the issue the branch works on, then a short description: `joaotav/7-display-settings`. Branches for small fixes without an issue leave out the number: `joaotav/fix-readme-typo`.
