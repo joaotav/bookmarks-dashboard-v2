@@ -1,7 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- A temporary chickadee until the proper logo (#33). -->
   <rect x="4" y="4" width="120" height="120" rx="28" fill="#8b9cf7"/>
-  <rect x="26" y="26" width="34" height="34" rx="9" fill="#1c1d22"/>
-  <rect x="68" y="26" width="34" height="34" rx="9" fill="#1c1d22"/>
-  <rect x="26" y="68" width="34" height="34" rx="9" fill="#1c1d22"/>
-  <rect x="68" y="68" width="34" height="34" rx="9" fill="#1c1d22"/>
+  <!-- branch, tail, belly, buff flank, grey wing -->
+  <rect x="20" y="104" width="90" height="7" rx="3.5" fill="#3b3440"/>
+  <path d="M96 82 L120 94 L115 102 L92 92 Z" fill="#4a4c58"/>
+  <ellipse cx="70" cy="80" rx="38" ry="27" fill="#f4efe6"/>
+  <ellipse cx="78" cy="90" rx="24" ry="13" fill="#e6cfae"/>
+  <path d="M62 62 C80 52 104 60 108 78 C102 90 84 92 68 86 C63 80 61 70 62 62 Z" fill="#6c7080"/>
+  <!-- black cap and bib, white cheek, eye, beak -->
+  <circle cx="46" cy="50" r="29" fill="#1c1d22"/>
+  <path d="M26 52 L72 40 C76 48 76 58 71 67 L36 59 C31 57 28 55 26 52 Z" fill="#ffffff"/>
+  <circle cx="37" cy="42" r="3.2" fill="#ffffff"/>
+  <path d="M19 44 L7 50 L19 55 Z" fill="#1c1d22"/>
 </svg>
