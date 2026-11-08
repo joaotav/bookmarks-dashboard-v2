@@ -27,6 +27,11 @@ export default defineConfig({
   vite: () => ({
     server: { cors: { origin: /^moz-extension:\/\// } },
   }),
+  // The source zip sent to Mozilla when signing is built from the project folder, not from
+  // git, so it would include Playwright's results from the last test run.
+  zip: {
+    excludeSources: ['test-results/**'],
+  },
   // WXT targets MV2 for Firefox by default. Both browsers use MV3 (ADR 0002).
   manifestVersion: 3,
   manifest: ({ browser }) => ({
