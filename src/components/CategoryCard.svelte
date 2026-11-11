@@ -86,7 +86,7 @@
 <section class="card grip-{proto.grip} chevron-{proto.chevron}" class:collapsed>
   <div class="header">
     {#if ondelete && !renaming}
-      <Grip label="Move {title}" horizontal={proto.grip === 'c'} />
+      <Grip label="Move {title}" horizontal={proto.grip === 'c'} onclick={proto.grip === 'e' ? ontoggle : undefined} />
     {/if}
     {#if renaming}
       <InlineInput
@@ -239,6 +239,28 @@
   }
   .grip-d .header > :global(.menu) {
     order: 2;
+  }
+  /* PROTOTYPE: an invisible grip over the header, leaving the ⋯ menu free. Pressing and moving
+     drags the card, a click still collapses it, and Tab shows it for moving by keyboard. */
+  .grip-e .header > :global(.grip) {
+    position: absolute;
+    inset: 0 26px 0 0;
+    z-index: 1;
+    width: auto;
+    height: auto;
+    border-radius: 6px;
+    opacity: 0;
+  }
+  .grip-e .header > :global(.grip svg) {
+    visibility: hidden;
+  }
+  .grip-e .header > :global(.grip:focus-visible) {
+    opacity: 1;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .grip-e .header:hover .round {
+    background: var(--row-hover);
   }
   :is(.grip-b, .grip-c, .grip-d) .header > :global(.grip:hover) {
     background: var(--row-hover);

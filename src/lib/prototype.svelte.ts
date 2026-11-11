@@ -12,16 +12,25 @@ export const QUESTIONS = {
   },
   grip: {
     label: 'Card grip (#27)',
-    variants: { a: 'In the padding (now)', b: 'In the header', c: 'Top edge', d: 'Right, before ⋯' },
+    variants: {
+      a: 'In the padding (now)',
+      b: 'In the header',
+      c: 'Top edge',
+      d: 'Right, before ⋯',
+      e: 'Drag the header',
+    },
   },
 } as const;
 
 export type Question = keyof typeof QUESTIONS;
 
+// The user's picks so far: the gear and chevron C. The grip is still open.
+const DEFAULTS: Record<Question, string> = { icon: 'b', chevron: 'c', grip: 'e' };
+
 const params = new URLSearchParams(location.search);
 const pick = (question: Question) => {
   const value = params.get(question);
-  return value && value in QUESTIONS[question].variants ? value : 'a';
+  return value && value in QUESTIONS[question].variants ? value : DEFAULTS[question];
 };
 
 export const proto = $state({ icon: pick('icon'), chevron: pick('chevron'), grip: pick('grip') });

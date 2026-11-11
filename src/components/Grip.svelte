@@ -1,12 +1,14 @@
 <script lang="ts">
   import { dragHandle } from 'svelte-dnd-action';
 
-  // PROTOTYPE: `horizontal` lays the dots out sideways, for the grip on a card's top edge.
-  let { label, horizontal = false }: { label: string; horizontal?: boolean } = $props();
+  // PROTOTYPE: `horizontal` lays the dots out sideways, for the grip on a card's top edge, and
+  // `onclick` lets a grip covering a card's header still collapse the card.
+  let { label, horizontal = false, onclick }: { label: string; horizontal?: boolean; onclick?: () => void } = $props();
 </script>
 
 <!-- svelte-dnd-action makes it a button that takes focus, and starts a drag with Space. -->
-<span class="grip" class:horizontal aria-label={label} use:dragHandle>
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<span class="grip" class:horizontal role="button" tabindex="0" aria-label={label} use:dragHandle {onclick}>
   {#if horizontal}
     <svg viewBox="0 0 16 10" aria-hidden="true">
       {#each [3, 8, 13] as x (x)}
