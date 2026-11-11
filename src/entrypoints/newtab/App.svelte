@@ -5,6 +5,7 @@
   import CategoryCard from '@/components/CategoryCard.svelte';
   import Menu from '@/components/Menu.svelte';
   import NewCategory from '@/components/NewCategory.svelte';
+  import PrototypeSwitcher from '@/components/PrototypeSwitcher.svelte';
   import SearchBox from '@/components/SearchBox.svelte';
   import SettingsPanel from '@/components/SettingsPanel.svelte';
   import SpaceForm from '@/components/SpaceForm.svelte';
@@ -304,6 +305,12 @@
   {#key toast}
     <Toast message={toast.message} onundo={toast.deleted ? undo : undefined} ondismiss={() => (toast = null)} />
   {/key}
+{/if}
+
+
+<!-- PROTOTYPE for #24, #27 and #28, only in development builds. -->
+{#if import.meta.env.DEV}
+  <PrototypeSwitcher />
 {/if}
 
 <style>

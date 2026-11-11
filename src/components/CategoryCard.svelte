@@ -8,6 +8,7 @@
   import InlineInput from './InlineInput.svelte';
   import LinkItem from './LinkItem.svelte';
   import Menu from './Menu.svelte';
+  import { proto } from '@/lib/prototype.svelte';
 
   let {
     id,
@@ -82,10 +83,10 @@
   ]);
 </script>
 
-<section class="card" class:collapsed>
+<section class="card grip-{proto.grip} chevron-{proto.chevron}" class:collapsed>
   <div class="header">
     {#if ondelete && !renaming}
-      <Grip label="Move {title}" />
+      <Grip label="Move {title}" horizontal={proto.grip === 'c'} />
     {/if}
     {#if renaming}
       <InlineInput
@@ -100,9 +101,18 @@
     {:else}
       <h2>
         <button aria-expanded={!collapsed} aria-controls="links-{id}" onclick={ontoggle}>
-          <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+          {#if proto.chevron === 'a'}
+            <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+          {:else if proto.chevron === 'b'}
+            <svg class="chevron triangle" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 4.5h5L6 8z" /></svg>
+          {/if}
           <span class="title">{title}</span>
           <span class="count">{links.length}</span>
+          {#if proto.chevron === 'c'}
+            <span class="round">
+              <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+            </span>
+          {/if}
         </button>
       </h2>
       {#if items.length > 0}
@@ -188,12 +198,50 @@
     opacity: 0;
   }
   /* In the card's padding, left of the chevron. */
-  .header > :global(.grip) {
+  .grip-a .header > :global(.grip) {
     position: absolute;
     top: 50%;
     left: calc(-1 * var(--card-padding));
     width: 12px;
     transform: translateY(-50%);
+  }
+  /* PROTOTYPE: grip in the header, with its own space before the chevron. */
+  .grip-b .header > :global(.grip) {
+    flex: none;
+    width: 14px;
+    height: 22px;
+    border-radius: 6px;
+  }
+  /* PROTOTYPE: grip centered on the card's top edge, shown while hovering the card. */
+  .grip-c .header > :global(.grip) {
+    position: absolute;
+    top: calc(-1 * var(--card-padding));
+    left: 50%;
+    width: 32px;
+    height: var(--card-padding);
+    border-radius: 0 0 6px 6px;
+    transform: translateX(-50%);
+  }
+  .grip-c .header > :global(.grip svg) {
+    width: 13px;
+    height: 8px;
+  }
+  .grip-c:hover .header > :global(.grip) {
+    opacity: 1;
+  }
+  /* PROTOTYPE: grip on the right, before the ⋯ menu. */
+  .grip-d .header > :global(.grip) {
+    flex: none;
+    order: 1;
+    width: 16px;
+    height: 22px;
+    border-radius: 5px;
+  }
+  .grip-d .header > :global(.menu) {
+    order: 2;
+  }
+  :is(.grip-b, .grip-c, .grip-d) .header > :global(.grip:hover) {
+    background: var(--row-hover);
   }
   h2 {
     flex: 1;
@@ -227,6 +275,36 @@
   }
   button:hover .chevron {
     stroke: var(--fg);
+  }
+  /* PROTOTYPE: a filled triangle, like a file tree. */
+  .chevron.triangle {
+    fill: var(--muted);
+    stroke-width: 1;
+  }
+  button:hover .chevron.triangle {
+    fill: var(--fg);
+  }
+  /* PROTOTYPE: on the right, in a round button. Points up while open, down while collapsed. */
+  .round {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    margin-left: 6px;
+    border-radius: 50%;
+  }
+  button:hover .round {
+    background: var(--row-hover);
+  }
+  .chevron-c .chevron {
+    width: 14px;
+    height: 14px;
+    stroke-width: 1.75;
+    transform: rotate(180deg);
+  }
+  .chevron-c.collapsed .chevron {
+    transform: none;
   }
   .title {
     overflow: hidden;

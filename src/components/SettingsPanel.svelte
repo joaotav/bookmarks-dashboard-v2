@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { proto } from '@/lib/prototype.svelte';
   import { OPTIONS, type Settings } from '@/lib/settings';
 
   let { settings, onchange }: { settings: Settings; onchange: (settings: Settings) => void } = $props();
@@ -39,17 +40,37 @@
 <div class="settings" bind:this={root}>
   <button
     class="toggle"
+    class:with-text={proto.icon === 'd'}
     aria-label="Settings"
     aria-expanded={open}
     aria-controls="settings-panel"
     bind:this={toggleButton}
     onclick={() => (open = !open)}
   >
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
-      <circle cx="16" cy="7" r="2" />
-      <circle cx="10" cy="17" r="2" />
-    </svg>
+    {#if proto.icon === 'a'}
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+        <circle cx="16" cy="7" r="2" />
+        <circle cx="10" cy="17" r="2" />
+      </svg>
+    {:else if proto.icon === 'c'}
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M12 3a9 9 0 1 0 0 18c1.1 0 1.5-.8 1.5-1.5 0-.4-.2-.7-.4-1-.2-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5H16a5 5 0 0 0 5-5c0-4.4-4-8-9-8z"
+        />
+        <circle cx="7.5" cy="11.5" r="1.2" fill="currentColor" stroke="none" />
+        <circle cx="10" cy="7.5" r="1.2" fill="currentColor" stroke="none" />
+        <circle cx="14.5" cy="7.5" r="1.2" fill="currentColor" stroke="none" />
+      </svg>
+    {:else}
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+        />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+      {#if proto.icon === 'd'}<span class="text">Settings</span>{/if}
+    {/if}
   </button>
   {#if open}
     <div id="settings-panel" class="panel" role="dialog" aria-label="Display settings">
@@ -87,6 +108,16 @@
     height: 34px;
     border-radius: 8px;
     color: var(--muted);
+  }
+  /* PROTOTYPE: icon with text. */
+  .toggle.with-text {
+    display: flex;
+    gap: 6px;
+    width: auto;
+    padding: 0 10px;
+  }
+  .text {
+    font-weight: 500;
   }
   .toggle:hover,
   .toggle[aria-expanded='true'] {
