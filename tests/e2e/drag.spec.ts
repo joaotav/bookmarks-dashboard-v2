@@ -47,6 +47,8 @@ async function drag(page: Page, grip: Locator, target: Locator, { y = 0.5 } = {}
 
 const row = (page: Page, name: string) => page.getByRole('listitem', { name });
 const grip = (page: Page, name: string) => page.getByRole('button', { name: `Move ${name}` });
+/** A category's header, which the pointer drags it by. Its grip is only for the keyboard. */
+const header = (page: Page, name: string) => page.getByRole('button', { name: new RegExp(`^${name}`) });
 
 test('moves a link down and up within its category, then into another one', async ({ dashboard }) => {
   const ids = await addBookmarks(dashboard, sample);
@@ -96,13 +98,15 @@ test('moves a category, and Unsorted stays first', async ({ dashboard }) => {
   await addBookmarks(dashboard, [{ title: 'Loose', url: 'https://example.com/' }], ids['Work']);
   await expectCards(dashboard, ['Unsorted', 'Repos', 'Docs', 'Empty']);
 
-  await drag(dashboard, grip(dashboard, 'Repos'), dashboard.getByRole('heading', { name: /^Empty/ }));
+  await drag(dashboard, header(dashboard, 'Repos'), dashboard.getByRole('heading', { name: /^Empty/ }));
   await expectCards(dashboard, ['Unsorted', 'Docs', 'Empty', 'Repos']);
+  // Dragging by the header doesn't count as a click, so the card stays open.
+  await expect(header(dashboard, 'Repos')).toHaveAttribute('aria-expanded', 'true');
   // The last category goes to the end of the space's folder, after the loose links.
   await expect.poll(() => childTitles(dashboard, ids['Work']!)).toEqual(['Docs', 'Empty', 'Loose', 'Repos']);
 
   // Dropped before Unsorted, it becomes the first category.
-  await drag(dashboard, grip(dashboard, 'Empty'), dashboard.getByRole('heading', { name: /^Unsorted/ }));
+  await drag(dashboard, header(dashboard, 'Empty'), dashboard.getByRole('heading', { name: /^Unsorted/ }));
   await expectCards(dashboard, ['Unsorted', 'Empty', 'Docs', 'Repos']);
   await expect.poll(() => childTitles(dashboard, ids['Work']!)).toEqual(['Empty', 'Docs', 'Loose', 'Repos']);
 });

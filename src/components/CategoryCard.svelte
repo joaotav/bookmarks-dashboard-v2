@@ -75,15 +75,27 @@
 
   const focus = (button: HTMLButtonElement) => button.focus();
 
+  let header: HTMLElement;
+
+  // Pressing the header drags the card, as pressing its grip would. The drag only starts once
+  // the pointer moves a few pixels, so a click still collapses the card.
+  function dragFromHeader(event: MouseEvent) {
+    const grip = header.querySelector('.grip');
+    if (!grip || event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    grip.dispatchEvent(new MouseEvent('mousedown', event));
+  }
+
   const items = $derived([
-    ...(onrename ? [{ label: 'Rename', onselect: () => (renaming = true) }] : []),
     ...(urls.length > 0 ? [{ label: 'Open all bookmarks', onselect: openAll }] : []),
+    ...(onrename ? [{ label: 'Rename', onselect: () => (renaming = true) }] : []),
     ...(ondelete ? [{ label: 'Delete', onselect: ondelete, danger: true }] : []),
   ]);
 </script>
 
 <section class="card" class:collapsed>
-  <div class="header">
+  <div class="header" class:draggable={ondelete} bind:this={header}>
     {#if ondelete && !renaming}
       <Grip label="Move {title}" />
     {/if}
@@ -99,10 +111,12 @@
       />
     {:else}
       <h2>
-        <button aria-expanded={!collapsed} aria-controls="links-{id}" onclick={ontoggle}>
-          <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+        <button aria-expanded={!collapsed} aria-controls="links-{id}" onclick={ontoggle} onmousedown={dragFromHeader}>
           <span class="title">{title}</span>
           <span class="count">{links.length}</span>
+          <span class="chevron">
+            <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+          </span>
         </button>
       </h2>
       {#if items.length > 0}
@@ -184,16 +198,30 @@
     align-items: center;
     gap: 4px;
   }
-  .header:not(:hover, :focus-within) > :global(:is(.menu:not(.open), .grip)) {
+  .header:not(:hover, :focus-within) > :global(.menu:not(.open)) {
     opacity: 0;
   }
-  /* In the card's padding, left of the chevron. */
+  /* The pointer drags the header itself, so the grip is only for the keyboard: it ignores the
+     pointer and shows as an outline around the header when tabbed to. */
   .header > :global(.grip) {
     position: absolute;
-    top: 50%;
-    left: calc(-1 * var(--card-padding));
-    width: 12px;
-    transform: translateY(-50%);
+    inset: 0;
+    width: auto;
+    height: auto;
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .header > :global(.grip:focus-visible) {
+    opacity: 1;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .header > :global(.grip svg) {
+    visibility: hidden;
+  }
+  .draggable button {
+    cursor: grab;
   }
   h2 {
     flex: 1;
@@ -211,21 +239,34 @@
     border-radius: 6px;
     text-align: left;
   }
+  /* Points up while the card is open, and down while it's collapsed. */
   .chevron {
+    display: grid;
     flex: none;
-    width: 12px;
-    height: 12px;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    margin-left: 6px;
+    border-radius: 50%;
+  }
+  .chevron svg {
+    width: 14px;
+    height: 14px;
     fill: none;
     stroke: var(--muted);
-    stroke-width: 1.5;
+    stroke-width: 1.75;
     stroke-linecap: round;
     stroke-linejoin: round;
+    transform: rotate(180deg);
     transition: transform 150ms;
   }
-  .collapsed .chevron {
-    transform: rotate(-90deg);
+  .collapsed .chevron svg {
+    transform: none;
   }
   button:hover .chevron {
+    background: var(--row-hover);
+  }
+  button:hover .chevron svg {
     stroke: var(--fg);
   }
   .title {
