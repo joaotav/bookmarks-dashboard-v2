@@ -60,6 +60,13 @@ describe('CategoryCard', () => {
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
   });
 
+  it('lists Open all bookmarks first, then Rename, then Delete', async () => {
+    render(CategoryCard, { ...props, onrename: () => {}, ondelete: () => {} });
+    await fireEvent.click(screen.getByRole('button', { name: 'Actions for Repos' }));
+    const items = screen.getByRole('button', { name: 'Rename' }).parentElement!;
+    expect([...items.children].map((item) => item.textContent)).toEqual(['Open all bookmarks', 'Rename', 'Delete']);
+  });
+
   it('has no menu at all without links it could open', () => {
     render(CategoryCard, { ...props, links: [{ id: 'l3', title: 'Bookmarklet', url: 'javascript:void 0', openable: false }] });
     expect(screen.queryByRole('button', { name: 'Actions for Repos' })).toBeNull();

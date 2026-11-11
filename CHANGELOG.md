@@ -9,6 +9,7 @@ How the extension changes from one version to the next. See [CONTRIBUTING.md](CO
 - Drag a category by its header instead of a small grip beside it. A click still collapses the category. With the keyboard, Tab to a category's grip, now shown as an outline around the header, and Space picks it up as before ([#27](https://github.com/joaotav/chickadee/issues/27))
 - A category's collapse chevron sits at the right of its header, after the link count, pointing up while the category is open and down while it's collapsed ([#28](https://github.com/joaotav/chickadee/issues/28))
 - The settings button shows a gear ([#24](https://github.com/joaotav/chickadee/issues/24))
+- A category's **⋯** menu lists **Open all bookmarks** first, then **Rename** and **Delete**
 
 ## 0.1.0 - 2026-11-08
 

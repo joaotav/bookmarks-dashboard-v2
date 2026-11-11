@@ -88,8 +88,8 @@
   }
 
   const items = $derived([
-    ...(onrename ? [{ label: 'Rename', onselect: () => (renaming = true) }] : []),
     ...(urls.length > 0 ? [{ label: 'Open all bookmarks', onselect: openAll }] : []),
+    ...(onrename ? [{ label: 'Rename', onselect: () => (renaming = true) }] : []),
     ...(ondelete ? [{ label: 'Delete', onselect: ondelete, danger: true }] : []),
   ]);
 </script>
