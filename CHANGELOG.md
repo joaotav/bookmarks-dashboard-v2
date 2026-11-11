@@ -6,6 +6,7 @@ How the extension changes from one version to the next. See [CONTRIBUTING.md](CO
 
 ### Improvements
 
+- A category's collapse chevron sits at the right of its header, after the link count, pointing up while the category is open and down while it's collapsed ([#28](https://github.com/joaotav/chickadee/issues/28))
 - The settings button shows a gear ([#24](https://github.com/joaotav/chickadee/issues/24))
 
 ## 0.1.0 - 2026-11-08

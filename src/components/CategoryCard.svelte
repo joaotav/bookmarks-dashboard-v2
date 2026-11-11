@@ -100,9 +100,11 @@
     {:else}
       <h2>
         <button aria-expanded={!collapsed} aria-controls="links-{id}" onclick={ontoggle}>
-          <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
           <span class="title">{title}</span>
           <span class="count">{links.length}</span>
+          <span class="chevron">
+            <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+          </span>
         </button>
       </h2>
       {#if items.length > 0}
@@ -211,21 +213,34 @@
     border-radius: 6px;
     text-align: left;
   }
+  /* Points up while the card is open, and down while it's collapsed. */
   .chevron {
+    display: grid;
     flex: none;
-    width: 12px;
-    height: 12px;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    margin-left: 6px;
+    border-radius: 50%;
+  }
+  .chevron svg {
+    width: 14px;
+    height: 14px;
     fill: none;
     stroke: var(--muted);
-    stroke-width: 1.5;
+    stroke-width: 1.75;
     stroke-linecap: round;
     stroke-linejoin: round;
+    transform: rotate(180deg);
     transition: transform 150ms;
   }
-  .collapsed .chevron {
-    transform: rotate(-90deg);
+  .collapsed .chevron svg {
+    transform: none;
   }
   button:hover .chevron {
+    background: var(--row-hover);
+  }
+  button:hover .chevron svg {
     stroke: var(--fg);
   }
   .title {
