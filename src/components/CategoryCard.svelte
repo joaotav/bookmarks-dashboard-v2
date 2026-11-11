@@ -259,7 +259,7 @@
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
-  .grip-e .header:hover .round {
+  .grip-e .header > :global(.grip:hover ~ h2 .round) {
     background: var(--row-hover);
   }
   :is(.grip-b, .grip-c, .grip-d) .header > :global(.grip:hover) {
