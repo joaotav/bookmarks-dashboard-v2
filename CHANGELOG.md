@@ -4,6 +4,10 @@ How the extension changes from one version to the next. See [CONTRIBUTING.md](CO
 
 ## Unreleased
 
+### Improvements
+
+- The settings button shows a gear ([#24](https://github.com/joaotav/chickadee/issues/24))
+
 ## 0.1.0 - 2026-11-08
 
 The first release.
